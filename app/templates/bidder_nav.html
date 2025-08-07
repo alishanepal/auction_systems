@@ -1,0 +1,25 @@
+{% block navbar_style %}
+<nav class="navigation">
+    <!-- Upper Navbar -->
+    <div class="upper-navbar">
+        <div class="brand"><a href="/">Auction System</a></div>
+
+        <div class="search">
+            <input type="text" placeholder="Search auctions...">
+            <button type="submit">Search</button>
+        </div>
+
+        <div class="auth-links">
+            <a href="javascript:void(0);" onclick="openModal('loginModal')" role="button">Login</a>
+            <a href="javascript:void(0);" onclick="openModal('signupModal')" role="button">Signup</a>
+        </div>
+    </div>
+
+    <!-- Lower Navbar -->
+    <div class="lower-navbar">
+        <a href="/live">Live Auction</a>
+        <a href="/upcoming">Upcoming Auction</a>
+        <a href="/closed">Closed Auction</a>
+    </div>
+</nav>
+{% endblock %}
