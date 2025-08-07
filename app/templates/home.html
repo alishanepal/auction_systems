@@ -133,14 +133,16 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Signup successful!');
+                    alert(data.message);
                     closeModal('signupModal');
                     form.reset();
+                    // Optionally redirect to login
+                    setTimeout(() => openModal('loginModal'), 1000);
                 } else {
                     alert(data.message || 'Signup failed!');
                 }
             } catch (error) {
-                alert('Error occurred during signup');
+                alert('Error occurred during signup. Please try again.');
                 console.error('Signup error:', error);
             }
         }

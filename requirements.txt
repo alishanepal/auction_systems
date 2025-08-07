@@ -1,0 +1,4 @@
+flask==2.3.3
+flask-sqlalchemy==3.0.5
+flask-migrate==4.0.4
+werkzeug==2.3.7
