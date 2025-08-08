@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_migrate import Migrate
 import os
+import secrets
 from .models import db
 
 def create_app():
@@ -9,7 +10,7 @@ def create_app():
                 static_folder=os.path.abspath(os.path.join(os.path.dirname(__file__), 'static')))
     
     # Database configuration
-    app.config['SECRET_KEY'] = 'your-secret-key-here'  # Required for session management
+    app.config['SECRET_KEY'] = secrets.token_hex(16)  # Generate a secure random key for session management
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///auction.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     

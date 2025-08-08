@@ -2,11 +2,149 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    background-color: #f5f5f5;
+    color: #333;
 }
 
 .content {
-    padding: 20px;
+    padding: 30px;
+    flex: 1;
+    margin-left: 250px; /* Same as sidenav width */
+    line-height: 1.6;
+}
+
+/* Home page specific styles */
+body.home-page {
+    display: block;
+}
+
+body.home-page .content {
+    margin-left: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 100px; /* Space for fixed navbar */
+}
+
+.home-banner {
+    background-color: #4a90e2;
+    color: white;
+    padding: 60px 30px;
+    text-align: center;
+    margin-bottom: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.home-banner h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.home-banner p {
+    font-size: 1.2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.features-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.feature-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 25px;
+    width: 300px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.feature-card h3 {
+    color: #4a90e2;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.feature-card p {
+    margin-bottom: 0;
+    color: #666;
+}
+
+/* Side Navigation */
+.sidenav {
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #dcd5ea;
+    overflow-x: hidden;
+    padding-top: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidenav .brand {
+    padding: 10px 15px 20px 15px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 1px solid #c9c6e1;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.sidenav .brand a {
+    color: #333;
+    text-decoration: none;
+}
+
+.sidenav a {
+    padding: 12px 15px;
+    text-decoration: none;
+    font-size: 16px;
+    color: #333;
+    display: block;
+    transition: 0.3s;
+    border-left: 3px solid transparent;
+}
+
+.sidenav a:hover {
+    background-color: #c9c6e1;
+    border-left: 3px solid #4a90e2;
+}
+
+.sidenav a.active {
+    background-color: #c9c6e1;
+    border-left: 3px solid #4a90e2;
+    font-weight: bold;
+}
+
+.sidenav .logout {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+}
+
+.sidenav .logout a {
+    color: #e74c3c;
+}
+
+.sidenav .logout a:hover {
+    background-color: #e74c3c;
+    color: white;
+    border-left: 3px solid #c0392b;
 }
 
 /* Navigation Styles */

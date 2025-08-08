@@ -1,0 +1,27 @@
+{% block navbar_style %}
+<nav class="navigation">
+    <!-- Upper Navbar -->
+    <div class="upper-navbar">
+        <div class="brand"><a href="/">Auction System</a></div>
+
+        <div class="search">
+            <input type="text" placeholder="Search...">
+            <button type="submit">Search</button>
+        </div>
+
+        <div class="auth-links">
+            <span>Admin: {{ session.username }}</span>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+
+    <!-- Lower Navbar -->
+    <div class="lower-navbar">
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/users">Users</a>
+        <a href="/admin/auctions">Auctions</a>
+        <a href="/admin/reports">Reports</a>
+        <a href="/admin/settings">Settings</a>
+    </div>
+</nav>
+{% endblock %}

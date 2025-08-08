@@ -5,11 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="home-page">
     {% include 'bidder_nav.html' %}
     <div class="content">
-        <h1>Welcome to the Online Auction System</h1>
-        <p>This is the homepage.</p>
+        <div class="home-banner">
+            <h1>Welcome to the Online Auction System</h1>
+            <p>Discover unique items, bid on treasures, and sell your valuables in our secure online marketplace.</p>
+        </div>
+        
+        <div class="features-section">
+            <div class="feature-card">
+                <h3>Live Auctions</h3>
+                <p>Participate in real-time bidding on a wide variety of items from sellers around the world.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Sell Your Items</h3>
+                <p>Create your own auctions and reach thousands of potential buyers for your products.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Secure Transactions</h3>
+                <p>Our platform ensures safe and secure transactions for both buyers and sellers.</p>
+            </div>
+        </div>
     </div>
 
     <!-- Login Modal -->
@@ -98,8 +117,10 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    // Redirect to the appropriate dashboard
                     alert('Login successful!');
                     closeModal('loginModal');
+                    window.location.href = data.redirect;
                     form.reset();
                 } else {
                     alert(data.message || 'Login failed!');
@@ -136,8 +157,8 @@
                     alert(data.message);
                     closeModal('signupModal');
                     form.reset();
-                    // Optionally redirect to login
-                    setTimeout(() => openModal('loginModal'), 1000);
+                    // Open login modal after successful registration
+                    openModal('loginModal');
                 } else {
                     alert(data.message || 'Signup failed!');
                 }

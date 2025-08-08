@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seller Dashboard - Auction System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="sidenav">
+        <div class="brand">
+            <a href="{{ url_for('main.home') }}">Auction System</a>
+        </div>
+        <a href="{{ url_for('main.seller_dashboard') }}" class="active">Dashboard</a>
+        <a href="#">Create Auction</a>
+        <a href="#">Auctions Report</a>
+        <a href="#">Product Report</a>
+        <div class="logout">
+            <a href="{{ url_for('main.logout') }}">Logout</a>
+        </div>
+    </div>
+    <div class="content">
+        <h1>Seller Dashboard</h1>
+        <p>Welcome to your seller dashboard. Here you can manage your auctions.</p>
+        
+        <div class="dashboard-section">
+            <h2>Your Auctions</h2>
+            <div class="action-button">
+                <a href="{{ url_for('main.create_auction') }}" class="btn">Create New Auction</a>
+            </div>
+            <div class="auction-list">
+                <!-- Auction items will be displayed here -->
+                <p>No auctions found. Create your first auction!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard functionality will be added here
+    </script>
+</body>
+</html>

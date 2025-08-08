@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - Auction System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="sidenav">
+        <div class="brand">
+            <a href="{{ url_for('main.home') }}">Auction System</a>
+        </div>
+        <a href="{{ url_for('main.admin_dashboard') }}" class="active">Dashboard</a>
+        <a href="{{ url_for('main.admin_categories') }}">Manage Categories</a>
+        <a href="#">Products Report</a>
+        <a href="#">Bidders Report</a>
+        <a href="#">Sellers Report</a>
+        <a href="#">Participants Report</a>
+        <a href="#">Winners Report</a>
+        <div class="logout">
+            <a href="{{ url_for('main.logout') }}">Logout</a>
+        </div>
+    </div>
+    <div class="content">
+        <h1>Admin Dashboard</h1>
+        <p>Welcome to the admin dashboard. Here you can manage the entire auction system.</p>
+        
+        <div class="dashboard-section">
+            <h2>System Overview</h2>
+            <div class="stats-container">
+                <div class="stat-box">
+                    <h3>Users</h3>
+                    <p class="stat-number">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Active Auctions</h3>
+                    <p class="stat-number">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Completed Auctions</h3>
+                    <p class="stat-number">0</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-section">
+            <h2>User Management</h2>
+            <div class="user-list">
+                <!-- User list will be displayed here -->
+                <p>No users found.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard functionality will be added here
+    </script>
+</body>
+</html>
