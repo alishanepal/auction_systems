@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seller Dashboard - Auction System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .dashboard-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .welcome-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-section h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .welcome-section p {
+            margin: 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 4px solid #4a90e2;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        
+        .stat-card.revenue {
+            border-left-color: #4caf50;
+        }
+        
+        .stat-card.revenue .stat-number {
+            color: #4caf50;
+        }
+        
+        .stat-card.bids {
+            border-left-color: #ff9800;
+        }
+        
+        .stat-card.bids .stat-number {
+            color: #ff9800;
+        }
+        
+        .auctions-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .auction-category {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .auction-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .auction-header h3 {
+            margin: 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.live {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .status-badge.upcoming {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .status-badge.ended {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .auction-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .auction-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+        }
+        
+        .auction-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .auction-item:last-child {
+            border-bottom: none;
+        }
+        
+        .auction-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .auction-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .auction-detail {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .auction-detail strong {
+            color: #333;
+        }
+        
+        .auction-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #4a90e2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #357abd;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .create-auction-section {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .create-auction-section h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.8em;
+        }
+        
+        .create-auction-section p {
+            margin: 0 0 25px 0;
+            opacity: 0.9;
+        }
+        
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            background-color: white;
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .auctions-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .auction-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidenav">
+        <div class="brand">
+            <a href="{{ url_for('main.home') }}">Auction System</a>
+        </div>
+        <a href="{{ url_for('main.seller_dashboard') }}" class="active">Dashboard</a>
+        <a href="{{ url_for('main.create_auction') }}">Create Auction</a>
+        <a href="#">Auctions Report</a>
+        <a href="#">Product Report</a>
+        <div class="logout">
+            <a href="{{ url_for('main.logout') }}">Logout</a>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="dashboard-container">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h1>Welcome back, {{ session.get('username', 'Seller') }}!</h1>
+                <p>Manage your auctions and track your performance</p>
+            </div>
+            
+            <!-- Statistics Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Products</h3>
+                    <p class="stat-number">{{ total_products }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Auctions</h3>
+                    <p class="stat-number">{{ total_auctions }}</p>
+                </div>
+                <div class="stat-card bids">
+                    <h3>Total Bids</h3>
+                    <p class="stat-number">{{ total_bids }}</p>
+                </div>
+                <div class="stat-card revenue">
+                    <h3>Total Revenue</h3>
+                    <p class="stat-number">{{ format_indian_currency(total_revenue) }}</p>
+                </div>
+            </div>
+            
+            <!-- Auctions Sections -->
+            <div class="auctions-section">
+                <!-- Live Auctions -->
+                <div class="auction-category">
+                    <div class="auction-header">
+                        <h3>
+                            <span class="status-badge live">Live</span>
+                            Live Auctions ({{ live_auctions|length }})
+                        </h3>
+                    </div>
+                    <div class="auction-list">
+                        {% if live_auctions %}
+                            {% for auction in live_auctions %}
+                            <div class="auction-item">
+                                <div class="auction-title">{{ auction.product.name }}</div>
+                                <div class="auction-details">
+                                    <div class="auction-detail">
+                                        <span>Starting Bid:</span>
+                                        <strong>{{ format_indian_currency(auction.product.starting_bid) }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Current Bids:</span>
+                                        <strong>{{ auction.bids|length }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Ends:</span>
+                                        <strong>{{ auction.end_date.strftime('%Y-%m-%d %H:%M') }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Status:</span>
+                                        <strong>{{ auction.status|title }}</strong>
+                                    </div>
+                                </div>
+                                <div class="auction-actions">
+                                    <a href="{{ url_for('main.view_auction', auction_id=auction.id) }}" class="btn-small btn-primary">View Auction</a>
+                                    <a href="#" class="btn-small btn-secondary">Edit</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <h3>No Live Auctions</h3>
+                                <p>You don't have any live auctions at the moment.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Upcoming Auctions -->
+                <div class="auction-category">
+                    <div class="auction-header">
+                        <h3>
+                            <span class="status-badge upcoming">Upcoming</span>
+                            Upcoming Auctions ({{ upcoming_auctions|length }})
+                        </h3>
+                    </div>
+                    <div class="auction-list">
+                        {% if upcoming_auctions %}
+                            {% for auction in upcoming_auctions %}
+                            <div class="auction-item">
+                                <div class="auction-title">{{ auction.product.name }}</div>
+                                <div class="auction-details">
+                                    <div class="auction-detail">
+                                        <span>Starting Bid:</span>
+                                        <strong>{{ format_indian_currency(auction.product.starting_bid) }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Starts:</span>
+                                        <strong>{{ auction.start_date.strftime('%Y-%m-%d %H:%M') }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Ends:</span>
+                                        <strong>{{ auction.end_date.strftime('%Y-%m-%d %H:%M') }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Status:</span>
+                                        <strong>{{ auction.status|title }}</strong>
+                                    </div>
+                                </div>
+                                <div class="auction-actions">
+                                    <a href="{{ url_for('main.view_auction', auction_id=auction.id) }}" class="btn-small btn-primary">View Auction</a>
+                                    <a href="#" class="btn-small btn-secondary">Edit</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <h3>No Upcoming Auctions</h3>
+                                <p>You don't have any upcoming auctions.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Ended Auctions -->
+                <div class="auction-category">
+                    <div class="auction-header">
+                        <h3>
+                            <span class="status-badge ended">Ended</span>
+                            Ended Auctions ({{ ended_auctions|length }})
+                        </h3>
+                    </div>
+                    <div class="auction-list">
+                        {% if ended_auctions %}
+                            {% for auction in ended_auctions %}
+                            <div class="auction-item">
+                                <div class="auction-title">{{ auction.product.name }}</div>
+                                <div class="auction-details">
+                                    <div class="auction-detail">
+                                        <span>Starting Bid:</span>
+                                        <strong>{{ format_indian_currency(auction.product.starting_bid) }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Total Bids:</span>
+                                        <strong>{{ auction.bids|length }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Ended:</span>
+                                        <strong>{{ auction.end_date.strftime('%Y-%m-%d %H:%M') }}</strong>
+                                    </div>
+                                    <div class="auction-detail">
+                                        <span>Final Price:</span>
+                                        <strong>
+                                            {% if auction.bids %}
+                                                {{ format_indian_currency(max(auction.bids, key=lambda x: x.bid_amount).bid_amount) }}
+                                            {% else %}
+                                                No bids
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="auction-actions">
+                                    <a href="{{ url_for('main.view_auction', auction_id=auction.id) }}" class="btn-small btn-primary">View Results</a>
+                                    <a href="#" class="btn-small btn-success">Download Report</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <h3>No Ended Auctions</h3>
+                                <p>You don't have any ended auctions yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Create New Auction Section -->
+            <div class="create-auction-section">
+                <h2>Ready to Create a New Auction?</h2>
+                <p>Start selling your products to thousands of potential buyers</p>
+                <a href="{{ url_for('main.create_auction') }}" class="btn-large">Create New Auction</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactive features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click animations to stat cards
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'translateY(-5px)';
+                    }, 150);
+                });
+            });
+            
+            // Auto-refresh dashboard every 30 seconds for live auctions
+            setInterval(() => {
+                // You can add AJAX call here to refresh live auction data
+                console.log('Dashboard auto-refresh check');
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

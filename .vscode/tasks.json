@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Flask: Run Development Server",
+			"type": "shell",
+			"command": "C:/flask/online_auction_system/venv/Scripts/python.exe run.py",
+			"isBackground": true,
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

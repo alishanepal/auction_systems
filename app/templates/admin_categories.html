@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Categories - Auction System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #4a90e2;
+            outline: none;
+        }
+        
+        .form-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn-submit {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-submit:hover {
+            background-color: #357abD;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        
+        .alert-error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+
+        .categories-list {
+            margin-top: 30px;
+        }
+
+        .category-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .category-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .subcategories {
+            margin-left: 20px;
+        }
+
+        .subcategory-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .subcategory-item:last-child {
+            border-bottom: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-edit, .btn-delete, .btn-toggle {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            border: none;
+        }
+
+        .btn-edit {
+            background-color: #f0ad4e;
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: #d9534f;
+            color: white;
+        }
+        
+        .btn-toggle {
+            background-color: #5bc0de;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidenav">
+        <div class="brand">
+            <a href="{{ url_for('main.home') }}">Auction System</a>
+        </div>
+        <a href="{{ url_for('main.admin_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('main.admin_categories') }}" class="active">Manage Categories</a>
+        <a href="#">Products Report</a>
+        <a href="#">Bidders Report</a>
+        <a href="#">Sellers Report</a>
+        <a href="#">Participants Report</a>
+        <a href="#">Winners Report</a>
+        <div class="logout">
+            <a href="{{ url_for('main.logout') }}">Logout</a>
+        </div>
+    </div>
+    
+    <div class="content">
+        <h1>Manage Categories</h1>
+        
+        <div id="alert" class="alert"></div>
+        
+        <div class="form-container">
+            <h2 class="form-title">Add New Category</h2>
+            
+            <form id="category-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category_name">Category Name *</label>
+                        <input type="text" id="category_name" name="category_name" required>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Add Category</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-container" style="margin-top: 30px;">
+            <h2 class="form-title">Add New Subcategory</h2>
+            
+            <form id="subcategory-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="parent_category">Parent Category *</label>
+                        <select id="parent_category" name="parent_category" required>
+                            <option value="">Select Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subcategory_name">Subcategory Name *</label>
+                        <input type="text" id="subcategory_name" name="subcategory_name" required>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Add Subcategory</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="categories-list">
+            <h2>Existing Categories</h2>
+            
+            {% for category in categories %}
+            <div class="category-item">
+                <div class="category-header">
+                    <div class="category-name">{{ category.name }}</div>
+                    <div class="action-buttons">
+                        <button class="btn-edit" onclick="editCategory({{ category.id }}, '{{ category.name }}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteCategory({{ category.id }})">Delete</button>
+                        <button class="btn-toggle" onclick="toggleSubcategories({{ category.id }})">Show Subcategories</button>
+                    </div>
+                </div>
+                <div class="subcategories" id="subcategories-{{ category.id }}" style="display: none;">
+                    {% for subcategory in category.subcategories %}
+                    <div class="subcategory-item">
+                        <div>{{ subcategory.name }}</div>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editSubcategory({{ subcategory.id }}, '{{ subcategory.name }}', {{ category.id }})">Edit</button>
+                            <button class="btn-delete" onclick="deleteSubcategory({{ subcategory.id }})">Delete</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editCategoryModal')">&times;</span>
+            <h2>Edit Category</h2>
+            <form id="edit-category-form">
+                <input type="hidden" id="edit_category_id" name="edit_category_id">
+                <div class="form-group">
+                    <label for="edit_category_name">Category Name *</label>
+                    <input type="text" id="edit_category_name" name="edit_category_name" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Subcategory Modal -->
+    <div id="editSubcategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editSubcategoryModal')">&times;</span>
+            <h2>Edit Subcategory</h2>
+            <form id="edit-subcategory-form">
+                <input type="hidden" id="edit_subcategory_id" name="edit_subcategory_id">
+                <div class="form-group">
+                    <label for="edit_subcategory_category">Parent Category *</label>
+                    <select id="edit_subcategory_category" name="edit_subcategory_category" required>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_subcategory_name">Subcategory Name *</label>
+                    <input type="text" id="edit_subcategory_name" name="edit_subcategory_name" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Update Subcategory</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // Connect to WebSocket server
+        const socket = io();
+        
+        socket.on('connect', function() {
+            console.log('Connected to WebSocket server');
+            // Request status update when connected
+            socket.emit('request_status_update');
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Disconnected from WebSocket server');
+        });
+        
+        // Listen for auction status updates
+        socket.on('auctions_updated', function(data) {
+            console.log('Received auction updates:', data);
+            // Update UI if needed
+            if (data.auctions && data.auctions.length > 0) {
+                // You can add code here to update the UI with new auction statuses
+                // For example, update status labels or refresh auction lists
+            }
+        });
+        
+        // Listen for new auctions
+        socket.on('new_auction', function(data) {
+            console.log('New auction created:', data);
+            // You can add code here to update the UI with the new auction
+        });
+        // Show alert message
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            
+            // Hide alert after 5 seconds
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Open modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Edit category
+        function editCategory(id, name) {
+            document.getElementById('edit_category_id').value = id;
+            document.getElementById('edit_category_name').value = name;
+            openModal('editCategoryModal');
+        }
+        
+        // Toggle subcategories visibility
+        function toggleSubcategories(categoryId) {
+            const subcategoriesDiv = document.getElementById(`subcategories-${categoryId}`);
+            const button = event.target;
+            
+            if (subcategoriesDiv.style.display === 'none') {
+                subcategoriesDiv.style.display = 'block';
+                button.textContent = 'Hide Subcategories';
+            } else {
+                subcategoriesDiv.style.display = 'none';
+                button.textContent = 'Show Subcategories';
+            }
+        }
+
+        // Delete category
+        function deleteCategory(id) {
+            if (confirm('Are you sure you want to delete this category? This will also delete all subcategories.')) {
+                fetch(`/api/categories/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        // Reload page after successful deletion
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting category:', error);
+                    showAlert('An error occurred while deleting the category', 'error');
+                });
+            }
+        }
+
+        // Edit subcategory
+        function editSubcategory(id, name, categoryId) {
+            document.getElementById('edit_subcategory_id').value = id;
+            document.getElementById('edit_subcategory_name').value = name;
+            document.getElementById('edit_subcategory_category').value = categoryId;
+            openModal('editSubcategoryModal');
+        }
+
+        // Delete subcategory
+        function deleteSubcategory(id) {
+            if (confirm('Are you sure you want to delete this subcategory?')) {
+                fetch(`/api/subcategories/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        // Reload page after successful deletion
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting subcategory:', error);
+                    showAlert('An error occurred while deleting the subcategory', 'error');
+                });
+            }
+        }
+
+        // Add category form submission
+        document.getElementById('category-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/api/categories', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    // Reload page after successful addition
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding category:', error);
+                showAlert('An error occurred while adding the category', 'error');
+            });
+        });
+
+        // Add subcategory form submission
+        document.getElementById('subcategory-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/api/subcategories', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    // Reload page after successful addition
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding subcategory:', error);
+                showAlert('An error occurred while adding the subcategory', 'error');
+            });
+        });
+
+        // Edit category form submission
+        document.getElementById('edit-category-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const categoryId = document.getElementById('edit_category_id').value;
+            const formData = new FormData(this);
+            
+            fetch(`/api/categories/${categoryId}`, {
+                method: 'PUT',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeModal('editCategoryModal');
+                    // Reload page after successful update
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating category:', error);
+                showAlert('An error occurred while updating the category', 'error');
+            });
+        });
+
+        // Edit subcategory form submission
+        document.getElementById('edit-subcategory-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const subcategoryId = document.getElementById('edit_subcategory_id').value;
+            const formData = new FormData(this);
+            
+            fetch(`/api/subcategories/${subcategoryId}`, {
+                method: 'PUT',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeModal('editSubcategoryModal');
+                    // Reload page after successful update
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating subcategory:', error);
+                showAlert('An error occurred while updating the subcategory', 'error');
+            });
+        });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
