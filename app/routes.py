@@ -7,7 +7,48 @@ main = Blueprint('main', __name__)
 
 @main.route('/')
 def home():
-    return render_template('home.html')
+    # Fetch products with auctions to display on the home page
+    from .models import Product, Auction
+    from sqlalchemy import desc
+    from datetime import datetime
+    
+    now = datetime.utcnow()
+    
+    # Get all auctions
+    auctions = Auction.query.all()
+    
+    # Categorize auctions by status
+    live_auctions = []
+    upcoming_auctions = []
+    ended_auctions = []
+    
+    for auction in auctions:
+        if auction.status == 'live':
+            live_auctions.append(auction)
+        elif auction.status == 'upcoming':
+            upcoming_auctions.append(auction)
+        else:  # ended
+            ended_auctions.append(auction)
+    
+    # Get products for each category (limit to 6 per category)
+    live_products = [auction.product for auction in live_auctions[:6]]
+    upcoming_products = [auction.product for auction in upcoming_auctions[:6]]
+    ended_products = [auction.product for auction in ended_auctions[:6]]
+    
+    return render_template('home.html', 
+                           live_products=live_products,
+                           upcoming_products=upcoming_products,
+                           ended_products=ended_products)
+
+@main.route('/auction/<int:auction_id>')
+def view_auction(auction_id):
+    # Fetch the auction and its associated product
+    from .models import Auction, Product
+    
+    auction = Auction.query.get_or_404(auction_id)
+    product = auction.product
+    
+    return render_template('view_auction.html', auction=auction, product=product)
 
 # Login required decorator
 def login_required(f):
@@ -56,8 +97,18 @@ def process_login():
         }
     else:
         response = {'success': False, 'message': 'Invalid username or password'}
-    
+        
     return jsonify(response)
+
+@main.route('/logout')
+def logout():
+    # Clear session variables
+    session.pop('user_id', None)
+    session.pop('username', None)
+    session.pop('role', None)
+    
+    # Redirect to home page
+    return redirect(url_for('main.home'))
 
 @main.route('/api/signup', methods=['POST'])
 def process_signup():
@@ -103,11 +154,7 @@ def upcoming_auction():
 def closed_auction():
     return render_template('closed.html')
 
-@main.route('/logout')
-def logout():
-    # Clear session
-    session.clear()
-    return redirect(url_for('main.home'))
+# Removed duplicate logout route
 
 # Seller routes
 @main.route('/seller/dashboard')
@@ -332,6 +379,18 @@ def process_auction():
         return jsonify({'success': False, 'message': 'Required fields are missing'})
     
     try:
+        # Parse datetime strings
+        start_datetime = datetime.strptime(start_time, '%Y-%m-%dT%H:%M')
+        end_datetime = datetime.strptime(end_time, '%Y-%m-%dT%H:%M')
+        now = datetime.utcnow()
+        
+        # Validate start and end times
+        if start_datetime < now:
+            return jsonify({'success': False, 'message': 'Start time cannot be in the past'})
+        
+        if end_datetime <= start_datetime:
+            return jsonify({'success': False, 'message': 'End time must be after start time'})
+        
         # Handle image upload
         image_url = None
         if 'image' in request.files and request.files['image'].filename:
@@ -368,20 +427,31 @@ def process_auction():
         db.session.add(new_product)
         db.session.flush()  # Get the product ID
         
-        # Parse datetime strings
-        start_datetime = datetime.strptime(start_time, '%Y-%m-%dT%H:%M')
-        end_datetime = datetime.strptime(end_time, '%Y-%m-%dT%H:%M')
+        # Determine initial status based on start time
+        initial_status = 'upcoming'
+        if start_datetime <= now < end_datetime:
+            initial_status = 'live'
         
         # Create new auction
         new_auction = Auction(
             product_id=new_product.id,
             start_date=start_datetime,
             end_date=end_datetime,
-            status='pending'
+            status=initial_status
         )
         
         db.session.add(new_auction)
         db.session.commit()
+        
+        # Notify connected clients about the new auction
+        from . import socketio
+        socketio.emit('new_auction', {
+            'id': new_auction.id,
+            'product_name': new_product.name,
+            'status': new_auction.status,
+            'start_date': start_datetime.isoformat(),
+            'end_date': end_datetime.isoformat()
+        })
         
         return jsonify({'success': True, 'message': 'Auction created successfully!'})
         

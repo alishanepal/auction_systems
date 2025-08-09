@@ -84,9 +84,24 @@ class Auction(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     start_date = db.Column(db.DateTime, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.String(20), nullable=False, default='pending')  # pending, active, closed
     type = db.Column(db.String(20), nullable=False, default='auction')  # auction, buy_now, etc.
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    @property
+    def status(self):
+        """Determine auction status based on current time"""
+        now = datetime.utcnow()
+        
+        if now < self.start_date:
+            return 'upcoming'
+        elif now >= self.start_date and now < self.end_date:
+            return 'live'
+        else:
+            return 'ended'
+            
+    def update_status(self):
+        """Legacy method for compatibility - returns current status"""
+        return self.status
     
     def __repr__(self):
         return f'<Auction {self.id} for Product {self.product_id}>'

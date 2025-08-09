@@ -1,8 +1,12 @@
 from flask import Flask
 from flask_migrate import Migrate
+from flask_socketio import SocketIO
 import os
 import secrets
 from .models import db
+
+# Initialize SocketIO instance
+socketio = SocketIO()
 
 def create_app():
     app = Flask(__name__, 
@@ -24,5 +28,11 @@ def create_app():
     
     from .routes import main
     app.register_blueprint(main)
+    
+    # Initialize SocketIO with the app
+    socketio.init_app(app, cors_allowed_origins="*")
+    
+    # Import and register socket events
+    from . import socket_events
     
     return app

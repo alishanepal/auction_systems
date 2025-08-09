@@ -13,6 +13,99 @@
             <p>Discover unique items, bid on treasures, and sell your valuables in our secure online marketplace.</p>
         </div>
         
+        <!-- Live Auctions Section -->
+        <div id="live-auctions" class="auction-section live-auctions">
+            <h2>Live Auctions</h2>
+            <div class="product-grid">
+                {% if live_products %}
+                    {% for product in live_products %}
+                        <div class="product-card">
+                            {% if product.image_url %}
+                                <div class="product-image">
+                                    <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+                                </div>
+                            {% else %}
+                                <div class="product-image no-image">
+                                    <span>No Image</span>
+                                </div>
+                            {% endif %}
+                            <div class="product-details">
+                                <h3>{{ product.name }}</h3>
+                                <p class="product-price">Starting Bid: ${{ product.starting_bid }}</p>
+                                <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                                <div class="status-badge live">Live</div>
+                                <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No live auctions available at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Upcoming Auctions Section -->
+        <div id="upcoming-auctions" class="auction-section upcoming-auctions">
+            <h2>Upcoming Auctions</h2>
+            <div class="product-grid">
+                {% if upcoming_products %}
+                    {% for product in upcoming_products %}
+                        <div class="product-card">
+                            {% if product.image_url %}
+                                <div class="product-image">
+                                    <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+                                </div>
+                            {% else %}
+                                <div class="product-image no-image">
+                                    <span>No Image</span>
+                                </div>
+                            {% endif %}
+                            <div class="product-details">
+                                <h3>{{ product.name }}</h3>
+                                <p class="product-price">Starting Bid: ${{ product.starting_bid }}</p>
+                                <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                                <div class="status-badge upcoming">Upcoming</div>
+                                <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No upcoming auctions available at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Ended Auctions Section -->
+        <div id="ended-auctions" class="auction-section ended-auctions">
+            <h2>Ended Auctions</h2>
+            <div class="product-grid">
+                {% if ended_products %}
+                    {% for product in ended_products %}
+                        <div class="product-card">
+                            {% if product.image_url %}
+                                <div class="product-image">
+                                    <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+                                </div>
+                            {% else %}
+                                <div class="product-image no-image">
+                                    <span>No Image</span>
+                                </div>
+                            {% endif %}
+                            <div class="product-details">
+                                <h3>{{ product.name }}</h3>
+                                <p class="product-price">Starting Bid: ${{ product.starting_bid }}</p>
+                                <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                                <div class="status-badge ended">Ended</div>
+                                <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Results</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No ended auctions available at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+        
         <div class="features-section">
             <div class="feature-card">
                 <h3>Live Auctions</h3>
@@ -87,21 +180,72 @@
     </div>
 
     <script>
-        // Modal functionality
+        // Login Modal Functions
         function openModal(modalId) {
-            document.getElementById(modalId).style.display = "block";
+            document.getElementById(modalId).style.display = 'block';
         }
-
+        
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = "none";
+            document.getElementById(modalId).style.display = 'none';
         }
-
-        // Close modal when clicking outside
+        
+        // Close modal when clicking outside of it
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
+                event.target.style.display = 'none';
             }
         }
+        
+        // Smooth scrolling for category links
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryLinks = document.querySelectorAll('.category-link');
+            
+            // Add smooth scrolling to all category links
+            categoryLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80, // Adjust for fixed header
+                            behavior: 'smooth'
+                        });
+                        
+                        // Set active class
+                        categoryLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    }
+                });
+            });
+            
+            // Set active category based on scroll position
+            window.addEventListener('scroll', function() {
+                const scrollPosition = window.scrollY;
+                
+                // Check which section is currently in view
+                document.querySelectorAll('.auction-section').forEach(section => {
+                    const sectionTop = section.offsetTop - 100;
+                    const sectionBottom = sectionTop + section.offsetHeight;
+                    
+                    if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                        const sectionId = section.id;
+                        
+                        // Set active class on corresponding links
+                        categoryLinks.forEach(link => {
+                            const linkHref = link.getAttribute('href').substring(1);
+                            if (linkHref === sectionId) {
+                                link.classList.add('active');
+                            } else {
+                                link.classList.remove('active');
+                            }
+                        });
+                    }
+                });
+            });
+        });
 
         // Handle Login
         async function handleLogin(event) {
