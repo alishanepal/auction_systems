@@ -26,8 +26,8 @@ def create_app():
     with app.app_context():
         db.create_all()
     
-    from .routes import main
-    app.register_blueprint(main)
+    from .routes import init_app as init_routes
+    init_routes(app)
     
     # Initialize SocketIO with the app
     socketio.init_app(app, cors_allowed_origins="*")

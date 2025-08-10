@@ -12,11 +12,14 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # 'bidder' or 'seller'
+    status = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'accepted', 'rejected'
+    created_at = db.Column(db.DateTime, default=datetime.now)
     
     # Relationships
     products = db.relationship('Product', backref='seller', lazy=True)
     bids = db.relationship('Bid', backref='bidder', lazy=True)
     won_auctions = db.relationship('AuctionResult', backref='winner', lazy=True)
+    search_history = db.relationship('SearchHistory', backref='user', lazy=True)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -70,7 +73,7 @@ class Product(db.Model):
     subcategory_id = db.Column(db.Integer, db.ForeignKey('subcategories.id'), nullable=False)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     image_url = db.Column(db.String(255), nullable=True)  # Store the path to the uploaded image
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     
     # Relationships
     auctions = db.relationship('Auction', backref='product', lazy=True)
@@ -96,7 +99,7 @@ class Auction(db.Model):
     @property
     def status(self):
         """Determine auction status based on current time"""
-        now = datetime.utcnow()
+        now = datetime.now()  # Use local time instead of UTC
         
         if now < self.start_date:
             return 'upcoming'
@@ -120,7 +123,7 @@ class Bid(db.Model):
     auction_id = db.Column(db.Integer, db.ForeignKey('auctions.id'), nullable=False)
     bidder_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     bid_amount = db.Column(db.Float, nullable=False)
-    bid_time = db.Column(db.DateTime, default=datetime.utcnow)
+    bid_time = db.Column(db.DateTime, default=datetime.now)
     
     def __repr__(self):
         return f'<Bid {self.id} by User {self.bidder_id} on Auction {self.auction_id}>'
@@ -131,9 +134,41 @@ class AuctionResult(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     auction_id = db.Column(db.Integer, db.ForeignKey('auctions.id'), nullable=False, unique=True)
-    winner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    winner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     winning_bid = db.Column(db.Float, nullable=False)
-    ended_at = db.Column(db.DateTime, default=datetime.utcnow)
+    ended_at = db.Column(db.DateTime, default=datetime.now)
     
     def __repr__(self):
         return f'<AuctionResult {self.id} for Auction {self.auction_id}>'
+
+
+class SearchHistory(db.Model):
+    __tablename__ = 'search_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    query = db.Column(db.String(255), nullable=False)
+    search_type = db.Column(db.String(20), nullable=False, default='all')  # all, products, categories, subcategories, sellers
+    timestamp = db.Column(db.DateTime, default=datetime.now)
+    
+    def __repr__(self):
+        return f'<SearchHistory {self.id} by User {self.user_id}>'
+
+
+class BidHistory(db.Model):
+    __tablename__ = 'bid_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auctions.id'), nullable=False)
+    bid_amount = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    product = db.relationship('Product', foreign_keys=[product_id])
+    auction = db.relationship('Auction', foreign_keys=[auction_id])
+    user = db.relationship('User', foreign_keys=[user_id], backref='bid_history_entries')
+    
+    def __repr__(self):
+        return f'<BidHistory {self.id} by User {self.user_id} on Product {self.product_id}>'

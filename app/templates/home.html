@@ -13,6 +13,36 @@
             <p>Discover unique items, bid on treasures, and sell your valuables in our secure online marketplace.</p>
         </div>
         
+        <!-- Personalized Recommendations Section -->
+        {% if recommended_products %}
+        <div id="recommended-auctions" class="auction-section recommended-auctions">
+            <h2>Recommended for You</h2>
+            <div class="product-grid">
+                {% for product in recommended_products %}
+                    <div class="product-card">
+                        {% if product.image_url %}
+                            <div class="product-image">
+                                <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+                            </div>
+                        {% else %}
+                            <div class="product-image no-image">
+                                <span>No Image</span>
+                            </div>
+                        {% endif %}
+                        <div class="product-details">
+                            <h3>{{ product.name }}</h3>
+                            <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+                            <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                            <p class="product-seller">Seller: {{ product.seller.username }}</p>
+                            <div class="status-badge live">Live</div>
+                            <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
         <!-- Live Auctions Section -->
         <div id="live-auctions" class="auction-section live-auctions">
             <h2>Live Auctions</h2>
@@ -29,13 +59,14 @@
                                     <span>No Image</span>
                                 </div>
                             {% endif %}
-                            <div class="product-details">
-                                <h3>{{ product.name }}</h3>
-                                <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
-                                <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
-                                <div class="status-badge live">Live</div>
-                                <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
-                            </div>
+                                                         <div class="product-details">
+                                 <h3>{{ product.name }}</h3>
+                                 <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+                                 <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                                 <p class="product-seller">Seller: {{ product.seller.username }}</p>
+                                 <div class="status-badge live">Live</div>
+                                 <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                             </div>
                         </div>
                     {% endfor %}
                 {% else %}
@@ -60,13 +91,14 @@
                                     <span>No Image</span>
                                 </div>
                             {% endif %}
-                            <div class="product-details">
-                                <h3>{{ product.name }}</h3>
-                                <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
-                                <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
-                                <div class="status-badge upcoming">Upcoming</div>
-                                <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
-                            </div>
+                                                         <div class="product-details">
+                                 <h3>{{ product.name }}</h3>
+                                 <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+                                 <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                                 <p class="product-seller">Seller: {{ product.seller.username }}</p>
+                                 <div class="status-badge upcoming">Upcoming</div>
+                                 <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                             </div>
                         </div>
                     {% endfor %}
                 {% else %}
@@ -91,13 +123,14 @@
                                     <span>No Image</span>
                                 </div>
                             {% endif %}
-                            <div class="product-details">
-                                <h3>{{ product.name }}</h3>
-                                <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
-                                <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
-                                <div class="status-badge ended">Ended</div>
-                                <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Results</a>
-                            </div>
+                                                         <div class="product-details">
+                                 <h3>{{ product.name }}</h3>
+                                 <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+                                 <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                                 <p class="product-seller">Seller: {{ product.seller.username }}</p>
+                                 <div class="status-badge ended">Ended</div>
+                                 <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Results</a>
+                             </div>
                         </div>
                     {% endfor %}
                 {% else %}

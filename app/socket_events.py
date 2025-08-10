@@ -1,7 +1,7 @@
 from flask import request
 from flask_socketio import emit, join_room
 from . import socketio
-from .models import db, Auction, Product
+from .models import db, Auction, Product, AuctionResult, Bid
 from datetime import datetime
 import threading
 import time
@@ -52,6 +52,10 @@ def update_auction_statuses():
                 'status': current_status,
                 'product_name': auction.product.name
             })
+            
+            # If auction just ended, process the results
+            if current_status == 'ended' and prev_status == 'live':
+                process_auction_result(auction)
         
         # Store current status for next comparison
         setattr(db.session, prev_status_attr, current_status)
@@ -61,13 +65,93 @@ def update_auction_statuses():
         # Broadcast updates to all clients
         socketio.emit('auctions_updated', {'auctions': updated_auctions})
 
+def process_auction_result(auction):
+    """Process auction result for a specific auction"""
+    try:
+        # Check if result already exists
+        existing_result = AuctionResult.query.filter_by(auction_id=auction.id).first()
+        if existing_result:
+            return
+        
+        # Get the highest bid for this auction
+        highest_bid = Bid.query.filter_by(auction_id=auction.id).order_by(Bid.bid_amount.desc()).first()
+        
+        if highest_bid:
+            # Check if the bid meets the reserve price (if any)
+            if not auction.product.reserve_price or highest_bid.bid_amount >= auction.product.reserve_price:
+                # Create auction result
+                auction_result = AuctionResult(
+                    auction_id=auction.id,
+                    winner_id=highest_bid.bidder_id,
+                    winning_bid=highest_bid.bid_amount,
+                    ended_at=datetime.now()
+                )
+                db.session.add(auction_result)
+                
+                # Broadcast winner announcement
+                socketio.emit('auction_ended', {
+                    'auction_id': auction.id,
+                    'product_name': auction.product.name,
+                    'winner': highest_bid.bidder.username,
+                    'winning_bid': highest_bid.bid_amount,
+                    'has_winner': True
+                })
+            else:
+                # Reserve price not met - no winner
+                auction_result = AuctionResult(
+                    auction_id=auction.id,
+                    winner_id=None,
+                    winning_bid=highest_bid.bid_amount,  # Store the actual highest bid amount
+                    ended_at=datetime.now()
+                )
+                db.session.add(auction_result)
+                
+                # Broadcast no winner announcement
+                socketio.emit('auction_ended', {
+                    'auction_id': auction.id,
+                    'product_name': auction.product.name,
+                    'has_winner': False,
+                    'reason': 'Reserve price not met'
+                })
+        else:
+            # No bids placed - no winner
+            auction_result = AuctionResult(
+                auction_id=auction.id,
+                winner_id=None,
+                winning_bid=0.0,
+                ended_at=datetime.now()
+            )
+            db.session.add(auction_result)
+            
+            # Broadcast no winner announcement
+            socketio.emit('auction_ended', {
+                'auction_id': auction.id,
+                'product_name': auction.product.name,
+                'has_winner': False,
+                'reason': 'No bids placed'
+            })
+        
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error processing auction result for auction {auction.id}: {e}")
+
 # Background task for periodic status updates
 def background_task():
     """Background task to periodically update auction statuses"""
-    while True:
-        # Update auction statuses every 60 seconds
-        update_auction_statuses()
-        time.sleep(60)
+    from app import create_app
+    app = create_app()
+    
+    with app.app_context():
+        while True:
+            try:
+                # Update auction statuses every 60 seconds
+                update_auction_statuses()
+                time.sleep(60)
+            except Exception as e:
+                print(f"Error in background task: {e}")
+                time.sleep(60)  # Continue even if there's an error
 
 # Start the background task when the server starts
 background_thread = None

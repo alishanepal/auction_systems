@@ -202,15 +202,14 @@
         <div class="brand">
             <a href="{{ url_for('main.home') }}">Auction System</a>
         </div>
-        <a href="{{ url_for('main.admin_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('main.admin_categories') }}" class="active">Manage Categories</a>
-        <a href="#">Products Report</a>
-        <a href="#">Bidders Report</a>
-        <a href="#">Sellers Report</a>
-        <a href="#">Participants Report</a>
-        <a href="#">Winners Report</a>
+        <a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('admin.admin_categories') }}" class="active">Manage Categories</a>
+        <a href="{{ url_for('admin.admin_sellers_report') }}">Sellers Report</a>
+        <a href="{{ url_for('admin.admin_bidders_report') }}">Bidders Report</a>
+        <a href="{{ url_for('admin.admin_products_report') }}">Products Report</a>
+        <a href="{{ url_for('admin.admin_winners_report') }}">Winners Report</a>
         <div class="logout">
-            <a href="{{ url_for('main.logout') }}">Logout</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
         </div>
     </div>
     

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results - Auction System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .search-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: #4a90e2;
+        }
+        
+        .search-btn {
+            padding: 12px 24px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .search-btn:hover {
+            background-color: #357abd;
+        }
+        
+        .search-filters {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background-color: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+        
+        .results-section {
+            margin-bottom: 40px;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .results-count {
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .product-info {
+            padding: 20px;
+        }
+        
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .product-category {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .product-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+        
+        .product-seller {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .product-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-live {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .status-upcoming {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .status-ended {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .category-card, .subcategory-card, .seller-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .category-card:hover, .subcategory-card:hover, .seller-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .category-name, .subcategory-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .subcategory-parent {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .seller-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .seller-email {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .seller-products {
+            color: #4a90e2;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .no-results h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .suggestion-type {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        
+        .suggestion-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .suggestion-category {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .search-input-container {
+            position: relative;
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-filters {
+                justify-content: center;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'bidder_nav.html' %}
+    
+    <div class="content">
+        <div class="search-container">
+            
+            <!-- Search Filters -->
+            <div class="search-filters">
+                <a href="{{ url_for('search.search_page', q=query, type='all') }}" 
+                   class="filter-btn {% if request.args.get('type', 'all') == 'all' %}active{% endif %}">
+                    All Results
+                </a>
+                <a href="{{ url_for('search.search_page', q=query, type='products') }}" 
+                   class="filter-btn {% if request.args.get('type') == 'products' %}active{% endif %}">
+                    Products
+                </a>
+                <a href="{{ url_for('search.search_page', q=query, type='sellers') }}" 
+                   class="filter-btn {% if request.args.get('type') == 'sellers' %}active{% endif %}">
+                    Sellers
+                </a>
+                <a href="{{ url_for('search.search_page', q=query, type='categories') }}" 
+                   class="filter-btn {% if request.args.get('type') == 'categories' %}active{% endif %}">
+                    Categories
+                </a>
+                <a href="{{ url_for('search.search_page', q=query, type='subcategories') }}" 
+                   class="filter-btn {% if request.args.get('type') == 'subcategories' %}active{% endif %}">
+                    Subcategories
+                </a>
+            </div>
+            
+            {% if query %}
+                <!-- Products Results -->
+                {% if products %}
+                <div class="results-section">
+                    <div class="results-header">
+                        <h2>Products ({{ products|length }})</h2>
+                        <span class="results-count">Found {{ products|length }} products</span>
+                    </div>
+                    <div class="results-grid">
+                        {% for result in products %}
+                        <a href="{{ url_for('main.view_auction', auction_id=result.auction.id) if result.auction else '#' }}" 
+                           class="product-card">
+                            {% if result.product.image_url %}
+                                <img src="{{ url_for('static', filename=result.product.image_url) }}" 
+                                     alt="{{ result.product.name }}" 
+                                     class="product-image">
+                            {% else %}
+                                <div class="product-image" style="background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                    <span style="color: #666;">No Image</span>
+                                </div>
+                            {% endif %}
+                                                         <div class="product-info">
+                                 <div class="product-name">{{ result.product.name }}</div>
+                                 <div class="product-category">
+                                     {{ result.product.category.name if result.product.category else 'No Category' }}
+                                     {% if result.product.subcategory %}
+                                         > {{ result.product.subcategory.name }}
+                                     {% endif %}
+                                 </div>
+                                 <div class="product-seller">
+                                     Seller: {{ result.product.seller.username if result.product.seller else 'Unknown' }}
+                                 </div>
+                                 <div class="product-price">
+                                     Starting: {{ format_indian_currency(result.product.starting_bid) }}
+                                 </div>
+                                 {% if result.auction %}
+                                     <span class="product-status status-{{ result.auction.status }}">
+                                         {{ result.auction.status|title }}
+                                     </span>
+                                 {% endif %}
+                             </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Categories Results -->
+                {% if categories %}
+                <div class="results-section">
+                    <div class="results-header">
+                        <h2>Categories ({{ categories|length }})</h2>
+                        <span class="results-count">Found {{ categories|length }} categories</span>
+                    </div>
+                    <div class="results-grid">
+                        {% for result in categories %}
+                        <a href="{{ url_for('search.search_page', q=result.category.name, type='categories') }}" 
+                           class="category-card">
+                            <div class="category-name">{{ result.category.name }}</div>
+                            <div class="subcategory-parent">
+                                {{ result.category.subcategories|length }} subcategories
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Sellers Results -->
+                {% if sellers %}
+                <div class="results-section">
+                    <div class="results-header">
+                        <h2>Sellers ({{ sellers|length }})</h2>
+                        <span class="results-count">Found {{ sellers|length }} sellers</span>
+                    </div>
+                    <div class="results-grid">
+                        {% for result in sellers %}
+                        <a href="{{ url_for('search.search_page', q=result.seller.username, type='products') }}" 
+                           class="seller-card">
+                            <div class="seller-info">
+                                <div class="seller-name">{{ result.seller.username }}</div>
+                                <div class="seller-products">
+                                    {{ result.seller.products|length }} products listed
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Subcategories Results -->
+                {% if subcategories %}
+                <div class="results-section">
+                    <div class="results-header">
+                        <h2>Subcategories ({{ subcategories|length }})</h2>
+                        <span class="results-count">Found {{ subcategories|length }} subcategories</span>
+                    </div>
+                    <div class="results-grid">
+                        {% for result in subcategories %}
+                        <a href="{{ url_for('search.search_page', q=result.subcategory.name, type='subcategories') }}" 
+                           class="subcategory-card">
+                            <div class="subcategory-name">{{ result.subcategory.name }}</div>
+                            <div class="subcategory-parent">
+                                in {{ result.subcategory.category.name if result.subcategory.category else 'Unknown Category' }}
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- No Results -->
+                {% if not products and not categories and not subcategories and not sellers %}
+                <div class="no-results">
+                    <h3>No results found for "{{ query }}"</h3>
+                    <p>Try different keywords or check your spelling</p>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        // Search suggestions functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            // Hide suggestions if query is too short
+            if (query.length < 2) {
+                searchSuggestions.style.display = 'none';
+                return;
+            }
+            
+            // Set timeout to avoid too many requests
+            searchTimeout = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300);
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+                searchSuggestions.style.display = 'none';
+            }
+        });
+        
+        function fetchSuggestions(query) {
+            fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySuggestions(data.suggestions);
+                })
+                .catch(error => {
+                    console.error('Error fetching suggestions:', error);
+                });
+        }
+        
+        function displaySuggestions(suggestions) {
+            if (suggestions.length === 0) {
+                searchSuggestions.style.display = 'none';
+                return;
+            }
+            
+            searchSuggestions.innerHTML = '';
+            
+            suggestions.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `
+                    <div class="suggestion-type">${suggestion.type}</div>
+                    <div class="suggestion-name">${suggestion.name}</div>
+                    ${suggestion.category ? `<div class="suggestion-category">${suggestion.category}</div>` : ''}
+                    ${suggestion.seller ? `<div class="suggestion-category">Seller: ${suggestion.seller}</div>` : ''}
+                `;
+                
+                item.addEventListener('click', function() {
+                    if (suggestion.url) {
+                        window.location.href = suggestion.url;
+                    }
+                });
+                
+                searchSuggestions.appendChild(item);
+            });
+            
+            searchSuggestions.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

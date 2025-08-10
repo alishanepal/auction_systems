@@ -291,12 +291,12 @@
         <div class="brand">
             <a href="{{ url_for('main.home') }}">Auction System</a>
         </div>
-        <a href="{{ url_for('main.seller_dashboard') }}" class="active">Dashboard</a>
-        <a href="{{ url_for('main.create_auction') }}">Create Auction</a>
+        <a href="{{ url_for('seller.seller_dashboard') }}" class="active">Dashboard</a>
+        <a href="{{ url_for('seller.create_auction') }}">Create Auction</a>
         <a href="#">Auctions Report</a>
         <a href="#">Product Report</a>
         <div class="logout">
-            <a href="{{ url_for('main.logout') }}">Logout</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
         </div>
     </div>
     
@@ -451,8 +451,8 @@
                                     <div class="auction-detail">
                                         <span>Final Price:</span>
                                         <strong>
-                                            {% if auction.bids %}
-                                                {{ format_indian_currency(max(auction.bids, key=lambda x: x.bid_amount).bid_amount) }}
+                                            {% if auction.highest_bid %}
+                                                {{ format_indian_currency(auction.highest_bid.bid_amount) }}
                                             {% else %}
                                                 No bids
                                             {% endif %}
@@ -479,7 +479,7 @@
             <div class="create-auction-section">
                 <h2>Ready to Create a New Auction?</h2>
                 <p>Start selling your products to thousands of potential buyers</p>
-                <a href="{{ url_for('main.create_auction') }}" class="btn-large">Create New Auction</a>
+                <a href="{{ url_for('seller.create_auction') }}" class="btn-large">Create New Auction</a>
             </div>
         </div>
     </div>

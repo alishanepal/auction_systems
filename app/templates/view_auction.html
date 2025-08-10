@@ -211,6 +211,77 @@
             color: #1976d2;
         }
         
+        .winning-bid {
+            background-color: #4caf50;
+            color: white;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin: 2px 0;
+            font-weight: bold;
+        }
+        
+        .winning-bid .bidder {
+            color: white;
+        }
+        
+        .winning-bid .bid-amount {
+            color: white;
+        }
+        
+        .auction-result {
+            background-color: #4caf50;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .auction-result h3 {
+            color: white;
+            margin-top: 0;
+        }
+        
+        .no-winner {
+            background-color: #f44336;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .no-winner h3 {
+            color: white;
+            margin-top: 0;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        .notification.warning {
+            background: #ff9800;
+        }
+        
         .bidding-notice {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
@@ -300,6 +371,28 @@
                 <div class="ended-notice">
                     <p>This auction has ended.</p>
                 </div>
+                
+                <!-- Auction Result Section -->
+                {% if auction_result %}
+                    {% if auction_result.winner_id %}
+                        <div class="auction-result">
+                            <h3>🎉 Auction Won!</h3>
+                            <p><strong>Winner:</strong> {{ auction_result.winner.username }}</p>
+                            <p><strong>Winning Bid:</strong> {{ format_indian_currency(auction_result.winning_bid) }}</p>
+                            <p><strong>Ended:</strong> {{ auction_result.ended_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        </div>
+                    {% else %}
+                        <div class="no-winner">
+                            <h3>❌ No Winner</h3>
+                            {% if auction_result.winning_bid == 0 %}
+                                <p>No bids were placed on this auction.</p>
+                            {% else %}
+                                <p>Reserve price was not met. Highest bid: {{ format_indian_currency(auction_result.winning_bid) }}</p>
+                            {% endif %}
+                            <p><strong>Ended:</strong> {{ auction_result.ended_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
                 {% endif %}
                 
                 <!-- Two Column Grid Below Image -->
@@ -341,13 +434,16 @@
                             <div id="bid-history">
                                 {% if auction.bids %}
                                     <div class="bid-list">
-                                        {% for bid in auction.bids|sort(attribute='bid_time', reverse=true) %}
-                                        <div class="bid-item {% if bid.bidder_id == session.get('user_id') %}my-bid{% endif %}">
-                                            <span class="bidder">{{ bid.bidder.username }}{% if bid.bidder_id == session.get('user_id') %} (You){% endif %}</span>
-                                            <span class="bid-amount">{{ format_indian_currency(bid.bid_amount) }}</span>
-                                            <span class="bid-time">{{ bid.bid_time.strftime('%Y-%m-%d %H:%M:%S') }}</span>
-                                        </div>
-                                        {% endfor %}
+                                                                        {% for bid in auction.bids|sort(attribute='bid_time', reverse=true) %}
+                                <div class="bid-item {% if bid.bidder_id == session.get('user_id') %}my-bid{% endif %}{% if winning_bid and bid.id == winning_bid.id %} winning-bid{% endif %}">
+                                    <span class="bidder">
+                                        {{ bid.bidder.username }}{% if bid.bidder_id == session.get('user_id') %} (You){% endif %}
+                                        {% if winning_bid and bid.id == winning_bid.id %} 🏆{% endif %}
+                                    </span>
+                                    <span class="bid-amount">{{ format_indian_currency(bid.bid_amount) }}</span>
+                                    <span class="bid-time">{{ bid.bid_time.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                                </div>
+                                {% endfor %}
                                     </div>
                                 {% else %}
                                     <p>No bids yet. Be the first to bid!</p>
@@ -360,7 +456,75 @@
         </div>
     </div>
     
+    <!-- Notification Container -->
+    <div id="notification" class="notification" style="display: none;"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
+        // Connect to WebSocket server
+        const socket = io();
+        
+        socket.on('connect', function() {
+            console.log('Connected to WebSocket server');
+            // Join the auction room
+            socket.emit('join_auction', {auction_id: {{ auction.id }}});
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Disconnected from WebSocket server');
+        });
+        
+        // Listen for auction status updates
+        socket.on('auctions_updated', function(data) {
+            console.log('Received auction updates:', data);
+            // Check if this auction was updated
+            const updatedAuction = data.auctions.find(auction => auction.id == {{ auction.id }});
+            if (updatedAuction) {
+                console.log('This auction status changed to:', updatedAuction.status);
+                // Refresh the page to show updated status
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        });
+        
+        // Listen for auction ended events
+        socket.on('auction_ended', function(data) {
+            console.log('Auction ended:', data);
+            if (data.auction_id == {{ auction.id }}) {
+                if (data.has_winner) {
+                    showNotification(`🎉 Auction ended! Winner: ${data.winner} with bid: Rs ${data.winning_bid}`, 'success');
+                } else {
+                    showNotification(`❌ Auction ended! ${data.reason}`, 'error');
+                }
+                // Refresh the page to show the auction result
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            }
+        });
+        
+        // Notification function
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide notification after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 5000);
+        }
+        
         // Bidding functionality and countdown
         document.addEventListener('DOMContentLoaded', function() {
             const bidForm = document.getElementById('bidForm');
@@ -459,13 +623,13 @@
                     const minimumBid = currentHighestBid + minimumInterval;
                     
                     if (bidAmount < minimumBid) {
-                        alert(`Your bid must be at least ${formatIndianNumber(minimumBid)}`);
+                        showNotification(`Your bid must be at least ${formatIndianNumber(minimumBid)}`, 'error');
                         return;
                     }
                     
                     // Check if current user is the last bidder
                     if (lastBidderId === currentUserId) {
-                        alert('You cannot place consecutive bids. Please wait for another user to bid first.');
+                        showNotification('You cannot place consecutive bids. Please wait for another user to bid first.', 'error');
                         return;
                     }
                     
@@ -486,7 +650,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert(data.message.replace(/\$/g, 'Rs '));
+                            showNotification(data.message.replace(/\$/g, 'Rs '), 'success');
                             
                             // Update the current highest bid with the server response
                             currentHighestBid = data.new_highest_bid;
@@ -501,7 +665,7 @@
                                 location.reload();
                             }, 1000);
                         } else {
-                            alert(data.message);
+                            showNotification(data.message, 'error');
                         }
                     })
                     .finally(() => {
@@ -512,7 +676,7 @@
                     })
                     .catch(error => {
                         console.error('Error placing bid:', error);
-                        alert('Error placing bid. Please try again.');
+                        showNotification('Error placing bid. Please try again.', 'error');
                         
                         // Re-enable the submit button
                         const submitBtn = bidForm.querySelector('button[type="submit"]');

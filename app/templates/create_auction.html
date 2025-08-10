@@ -109,12 +109,12 @@
         <div class="brand">
             <a href="{{ url_for('main.home') }}">Auction System</a>
         </div>
-        <a href="{{ url_for('main.seller_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('main.create_auction') }}" class="active">Create Auction</a>
+        <a href="{{ url_for('seller.seller_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('seller.create_auction') }}" class="active">Create Auction</a>
         <a href="#">Auctions Report</a>
         <a href="#">Product Report</a>
         <div class="logout">
-            <a href="{{ url_for('main.logout') }}">Logout</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
         </div>
     </div>
     
@@ -359,7 +359,7 @@
                     
                     // Redirect to dashboard after delay
                     setTimeout(() => {
-                        window.location.href = '{{ url_for("main.seller_dashboard") }}';
+                        window.location.href = '{{ url_for("seller.seller_dashboard") }}';
                     }, 2000);
                 } else {
                     alertDiv.className = 'alert alert-error';

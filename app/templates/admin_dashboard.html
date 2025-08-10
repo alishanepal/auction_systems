@@ -303,15 +303,14 @@
         <div class="brand">
             <a href="{{ url_for('main.home') }}">Auction System</a>
         </div>
-        <a href="{{ url_for('main.admin_dashboard') }}" class="active">Dashboard</a>
-        <a href="{{ url_for('main.admin_categories') }}">Manage Categories</a>
-        <a href="#">Products Report</a>
-        <a href="#">Bidders Report</a>
-        <a href="#">Sellers Report</a>
-        <a href="#">Participants Report</a>
-        <a href="#">Winners Report</a>
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="active">Dashboard</a>
+        <a href="{{ url_for('admin.admin_categories') }}">Manage Categories</a>
+        <a href="{{ url_for('admin.admin_sellers_report') }}">Sellers Report</a>
+        <a href="{{ url_for('admin.admin_bidders_report') }}">Bidders Report</a>
+        <a href="{{ url_for('admin.admin_products_report') }}">Products Report</a>
+        <a href="{{ url_for('admin.admin_winners_report') }}">Winners Report</a>
         <div class="logout">
-            <a href="{{ url_for('main.logout') }}">Logout</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
         </div>
     </div>
     
@@ -426,7 +425,8 @@
                 <h2>Quick Actions</h2>
                 <p>Manage your auction system efficiently</p>
                 <div class="action-buttons">
-                    <a href="{{ url_for('main.admin_categories') }}" class="btn-admin">Manage Categories</a>
+                    <a href="{{ url_for('admin.admin_categories') }}" class="btn-admin">Manage Categories</a>
+                    <button id="processResultsBtn" class="btn-admin">Process Auction Results</button>
                     <a href="#" class="btn-admin">View Reports</a>
                     <a href="#" class="btn-admin">User Management</a>
                     <a href="#" class="btn-admin">System Settings</a>
@@ -466,6 +466,42 @@
                 // You can add AJAX call here to refresh dashboard data
                 console.log('Admin dashboard auto-refresh check');
             }, 60000);
+            
+            // Process Auction Results button functionality
+            const processResultsBtn = document.getElementById('processResultsBtn');
+            if (processResultsBtn) {
+                processResultsBtn.addEventListener('click', function() {
+                    // Disable button and show loading state
+                    this.disabled = true;
+                    this.textContent = 'Processing...';
+                    
+                    fetch('/api/process-auction-results', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Success: ${data.message}`);
+                            // Refresh the page to show updated data
+                            location.reload();
+                        } else {
+                            alert(`Error: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error processing auction results. Please try again.');
+                    })
+                    .finally(() => {
+                        // Re-enable button
+                        this.disabled = false;
+                        this.textContent = 'Process Auction Results';
+                    });
+                });
+            }
         });
     </script>
 </body>
