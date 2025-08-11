@@ -345,14 +345,14 @@
                         <h3>Place Your Bid</h3>
                         <div class="bid-info">
                             <p><strong>Current Highest Bid:</strong> <span id="current-highest-bid" class="highlight">{{ format_indian_currency(current_highest_amount) }}</span></p>
-                            <p><strong>Minimum Bid Increment:</strong> {{ format_indian_currency(product.minimum_interval) }}</p>
-                            <p><strong>Next Minimum Bid:</strong> <span id="current-minimum-bid" class="highlight">{{ format_indian_currency(current_highest_amount + product.minimum_interval) }}</span></p>
+                            <p><strong>Minimum Bid Increment:</strong> {{ format_indian_currency(initial_increment) }}</p>
+                            <p><strong>Next Minimum Bid:</strong> <span id="current-minimum-bid" class="highlight">{{ format_indian_currency(current_highest_amount + initial_increment) }}</span></p>
                         </div>
                         <form id="bidForm" class="bid-form">
                             <div class="form-group">
                                 <label for="bid-amount">Your Bid (Rs)</label>
-                                <input type="number" id="bid-amount" name="bid_amount" step="0.01" min="{{ current_highest_amount + product.minimum_interval }}" required>
-                                <small style="color: #666; font-size: 12px;">Minimum bid: <span id="min-bid-amount">{{ format_indian_currency(current_highest_amount + product.minimum_interval) }}</span></small>
+                                <input type="number" id="bid-amount" name="bid_amount" step="0.01" min="{{ current_highest_amount + initial_increment }}" required>
+                                <small style="color: #666; font-size: 12px;">Minimum bid: <span id="min-bid-amount">{{ format_indian_currency(current_highest_amount + initial_increment) }}</span></small>
                             </div>
                             <button type="submit" class="btn bid-btn">Place Bid</button>
                         </form>
@@ -534,7 +534,7 @@
             
             // Initial values
             let currentHighestBid = {{ current_highest_amount }};
-            let minimumInterval = {{ product.minimum_interval }};
+            let minimumInterval = {{ initial_increment }};
             let lastBidderId = {{ current_highest_bid.bidder_id if current_highest_bid else 'null' }};
             let currentUserId = {{ session.get('user_id', 'null') }};
             

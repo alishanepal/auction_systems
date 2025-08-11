@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from .models import db, Bid, Auction, Product, AuctionResult, Wishlist
-from .utils import login_required, role_required, format_indian_currency
+from .utils import login_required, role_required, format_indian_currency, calculate_minimum_increment
 from .recommendations import update_bid_history
 from datetime import datetime
 
@@ -33,8 +33,8 @@ def place_bid():
         current_highest_bid = Bid.query.filter_by(auction_id=auction_id).order_by(Bid.bid_amount.desc()).first()
         current_highest_amount = current_highest_bid.bid_amount if current_highest_bid else auction.product.starting_bid
         
-        # Calculate minimum bid amount
-        minimum_bid = current_highest_amount + auction.product.minimum_interval
+        # Calculate minimum bid amount using tiered increment
+        minimum_bid = current_highest_amount + calculate_minimum_increment(current_highest_amount)
         
         # Validate bid amount
         if bid_amount < minimum_bid:
@@ -65,7 +65,7 @@ def place_bid():
             'success': True, 
             'message': f'Bid of {format_indian_currency(bid_amount)} placed successfully!',
             'new_highest_bid': bid_amount,
-            'new_minimum_bid': bid_amount + auction.product.minimum_interval
+            'new_minimum_bid': bid_amount + calculate_minimum_increment(bid_amount)
         })
         
     except ValueError:

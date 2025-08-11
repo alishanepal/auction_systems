@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, session, current_app
 from .models import db, Product, Auction, Bid, Category, Subcategory
-from .utils import login_required, role_required, format_indian_currency
+from .utils import login_required, role_required, format_indian_currency, calculate_minimum_increment
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -108,8 +108,8 @@ def process_auction():
     print(f"Form data received: {dict(request.form)}")
     print(f"Files received: {dict(request.files)}")
     
-    # Calculate minimum interval as 5% of starting bid
-    minimum_interval = float(starting_bid) * 0.05 if starting_bid else 1.0
+    # Calculate minimum interval based on tiered brackets
+    minimum_interval = calculate_minimum_increment(float(starting_bid)) if starting_bid else 1.0
     
     # Validate required fields
     if not all([product_name, starting_bid, category_id, subcategory_id, start_time, end_time]):

@@ -165,7 +165,7 @@
                     <div class="form-group">
                         <label for="minimum_interval_display">Minimum Bid Increment</label>
                         <input type="text" id="minimum_interval_display" readonly style="background-color: #f5f5f5;">
-                        <small style="color: #666; font-size: 12px;">Automatically calculated as 5% of starting bid</small>
+                        <small style="color: #666; font-size: 12px;">Automatically calculated by price brackets</small>
                     </div>
                 </div>
                 
@@ -241,7 +241,20 @@
         
         function calculateMinimumInterval() {
             const startingBid = parseFloat(document.getElementById('starting_bid').value) || 0;
-            const minimumInterval = startingBid * 0.05; // 5% of starting bid
+            let pct = 0.05;
+            if (startingBid < 10000) {
+                pct = 0.05;
+            } else if (startingBid < 100000) {
+                pct = 0.03;
+            } else if (startingBid < 1000000) {
+                pct = 0.02;
+            } else if (startingBid < 10000000) {
+                pct = 0.015;
+            } else {
+                pct = 0.01;
+            }
+            let minimumInterval = startingBid * pct;
+            if (minimumInterval < 1) minimumInterval = 1;
             document.getElementById('minimum_interval_display').value = `Rs ${minimumInterval.toFixed(2)}`;
         }
         

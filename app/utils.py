@@ -1,6 +1,35 @@
 from flask import session, redirect, url_for
 from functools import wraps
 
+def calculate_minimum_increment(amount: float) -> float:
+    """Calculate initial minimum bid increment based on Indian price brackets.
+    Brackets:
+    - < 10,000 => 5%
+    - 10,000..99,999 => 3%
+    - 1,00,000..9,99,999 => 2%
+    - 10,00,000..99,99,999 => 1.5%
+    - >= 1,00,00,000 => 1%
+    Always returns at least 1.0
+    """
+    try:
+        amt = float(amount or 0)
+    except Exception:
+        amt = 0.0
+
+    if amt < 10000:
+        pct = 0.05
+    elif amt < 100000:
+        pct = 0.03
+    elif amt < 1000000:
+        pct = 0.02
+    elif amt < 10000000:
+        pct = 0.015
+    else:
+        pct = 0.01
+
+    increment = amt * pct
+    return increment if increment >= 1.0 else 1.0
+
 def format_indian_currency(amount):
     """Format amount in Indian currency style (1,00,000.00)"""
     if amount is None:
