@@ -161,14 +161,18 @@ class BidHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    auction_id = db.Column(db.Integer, db.ForeignKey('auctions.id'), nullable=False)
-    bid_amount = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    subcategory_id = db.Column(db.Integer, db.ForeignKey('subcategories.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    bid_count = db.Column(db.Integer, nullable=True)
+    last_bid_time = db.Column(db.DateTime, nullable=True)
     
     # Relationships
     product = db.relationship('Product', foreign_keys=[product_id])
-    auction = db.relationship('Auction', foreign_keys=[auction_id])
+    category = db.relationship('Category', foreign_keys=[category_id])
+    subcategory = db.relationship('Subcategory', foreign_keys=[subcategory_id])
+    seller = db.relationship('User', foreign_keys=[seller_id])
     user = db.relationship('User', foreign_keys=[user_id], backref='bid_history_entries')
     
     def __repr__(self):
-        return f'<BidHistory {self.id} by User {self.user_id} on Product {self.product_id}>'
+        return f'<BidHistory {self.id} user={self.user_id} product={self.product_id} count={self.bid_count}>'

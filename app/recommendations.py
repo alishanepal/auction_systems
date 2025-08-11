@@ -1,4 +1,4 @@
-from .models import db, Product, Category, Subcategory, User, SearchHistory, BidHistory, Auction
+from .models import db, Product, Category, Subcategory, User, SearchHistory, BidHistory, Auction, Bid
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, desc
 import numpy as np
@@ -26,29 +26,23 @@ def get_user_preferences(user_id):
             if len(word) > 2:  # Only consider words longer than 2 characters
                 preferences['keywords'][word] += 1
     
-    # Get bid history preferences
-    bid_history = db.session.query(BidHistory).filter_by(user_id=user_id).all()
-    for bid in bid_history:
-        # Get product details through the auction relationship
-        auction = db.session.query(Auction).get(bid.auction_id) if bid.auction_id else None
-        product = db.session.query(Product).get(bid.product_id) if bid.product_id else None
-        
+    # Get bid history preferences (aggregated)
+    bid_history_entries = db.session.query(BidHistory).filter_by(user_id=user_id).all()
+    for entry in bid_history_entries:
+        product = db.session.query(Product).get(entry.product_id) if entry.product_id else None
         if product and product.category:
-            # Category preference
-            preferences['categories'][product.category.name] += 1
-            
-            # Subcategory preference
+            preferences['categories'][product.category.name] += entry.bid_count or 1
             if product.subcategory:
-                preferences['subcategories'][product.subcategory.name] += 1
-        
-        # Seller preference
+                preferences['subcategories'][product.subcategory.name] += entry.bid_count or 1
         if product and product.seller:
-            preferences['sellers'][product.seller.username] += 1
-        
-        # Price range
-        if bid.bid_amount:
-            preferences['price_range']['min'] = min(preferences['price_range']['min'], bid.bid_amount)
-            preferences['price_range']['max'] = max(preferences['price_range']['max'], bid.bid_amount)
+            preferences['sellers'][product.seller.username] += entry.bid_count or 1
+
+    # Compute price range from actual bids table for this user
+    user_bids = db.session.query(Bid).filter_by(bidder_id=user_id).all()
+    for b in user_bids:
+        if b.bid_amount is not None:
+            preferences['price_range']['min'] = min(preferences['price_range']['min'], b.bid_amount)
+            preferences['price_range']['max'] = max(preferences['price_range']['max'], b.bid_amount)
     
     return preferences
 
@@ -216,21 +210,37 @@ def create_user_preference_vector(user_preferences):
     return np.array(features)
 
 def update_bid_history(user_id, product_id, auction_id, bid_amount):
-    """Update bid history when a user places a bid"""
-    from .models import db
-    
-    # Get product details
+    """Aggregate bid history per user/product by incrementing a counter and updating metadata."""
+    from sqlalchemy import and_
+
     product = db.session.query(Product).get(product_id)
     if not product:
         return
-    
-    # Create new bid history record
-    new_history = BidHistory(
-        user_id=user_id,
-        product_id=product_id,
-        auction_id=auction_id,
-        bid_amount=bid_amount,
-        timestamp=func.now()
+
+    existing = (
+        db.session.query(BidHistory)
+        .filter(
+            and_(
+                BidHistory.user_id == user_id,
+                BidHistory.product_id == product_id,
+            )
+        )
+        .first()
     )
-    db.session.add(new_history)
+
+    if existing:
+        existing.bid_count = (existing.bid_count or 0) + 1
+        existing.last_bid_time = func.now()
+    else:
+        new_history = BidHistory(
+            user_id=user_id,
+            product_id=product_id,
+            category_id=product.category_id,
+            subcategory_id=product.subcategory_id,
+            seller_id=product.seller_id,
+            bid_count=1,
+            last_bid_time=func.now(),
+        )
+        db.session.add(new_history)
+
     db.session.commit()

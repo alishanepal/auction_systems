@@ -15,7 +15,7 @@ def create_app():
     
     # Database configuration
     app.config['SECRET_KEY'] = secrets.token_hex(16)  # Generate a secure random key for session management
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///auction.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///auction_clean.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Initialize database

@@ -1,8 +1,8 @@
-"""add search and bid history tables
+"""Create clean database schema with aggregated bid history
 
-Revision ID: add_search_and_bid_history_tables
-Revises: e32db374c18c
-Create Date: 2024-01-01 12:00:00.000000
+Revision ID: create_clean_schema
+Revises: add_ended_at_to_auction_results
+Create Date: 2025-01-27 12:00:00.000000
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'add_search_and_bid_history_tables'
+revision = 'create_clean_schema'
 down_revision = 'add_ended_at_to_auction_results'
 branch_labels = None
 depends_on = None
@@ -28,7 +28,7 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
     
-    # Create bid_history table
+    # Create bid_history table with aggregated structure
     op.create_table('bid_history',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
