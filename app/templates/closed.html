@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ended Auctions</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% include 'bidder_nav.html' %}
+  <div class="content">
+    <h2>Ended Auctions</h2>
+    <div class="product-grid">
+      {% if products %}
+        {% for product in products %}
+        <div class="product-card">
+          {% if product.image_url %}
+          <div class="product-image">
+            <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+          </div>
+          {% else %}
+          <div class="product-image no-image"><span>No Image</span></div>
+          {% endif %}
+          <div class="product-details">
+            <h3>{{ product.name }}</h3>
+            <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+            <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+            <p class="product-seller">Seller: {{ product.seller.username }}</p>
+            <div class="status-badge ended">Ended</div>
+            <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Results</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="no-products">No ended auctions.</p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

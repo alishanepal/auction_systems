@@ -1,4 +1,4 @@
-from .models import db, Product, Category, Subcategory, User, SearchHistory, BidHistory, Auction, Bid
+from .models import db, Product, Category, Subcategory, User, SearchHistory, BidHistory, Auction, Bid, Wishlist
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, desc
 import numpy as np
@@ -157,6 +157,67 @@ def get_recommended_products(user_id, limit=12):
     recommended_products = [product for similarity, product in similarities[:limit]]
     
     return recommended_products
+
+def get_category_priority_for_user(user_id):
+    """Return category priority list for a user based on aggregated bid history counts.
+    Categories with more bids come first. Returns (ordered_category_ids, rank_map).
+    """
+    if not user_id:
+        return [], {}
+    # Aggregate bid counts by category
+    rows = (
+        db.session.query(BidHistory.category_id, func.sum(BidHistory.bid_count))
+        .filter(BidHistory.user_id == user_id)
+        .group_by(BidHistory.category_id)
+        .all()
+    )
+    # Order by total bid count desc
+    ordered = [category_id for category_id, total in sorted(rows, key=lambda r: r[1] or 0, reverse=True) if category_id]
+    rank = {category_id: idx for idx, category_id in enumerate(ordered)}
+    return ordered, rank
+
+def sort_products_for_user(products, user_id, limit=None):
+    """Sort products for a user using bid-prioritized category ordering and cosine similarity.
+    - Priority: categories the user has bid in (serial order)
+    - Secondary: content-based similarity using cosine similarity over feature vectors
+    """
+    if not products:
+        return []
+
+    if not user_id:
+        return products[:limit] if limit else products
+
+    # Build user preferences and vector
+    user_preferences = get_user_preferences(user_id)
+    user_vector = create_user_preference_vector(user_preferences)
+
+    # Category priority based on bids
+    ordered_categories, rank_map = get_category_priority_for_user(user_id)
+    max_rank = max(len(ordered_categories) - 1, 1)
+
+    scored = []
+    for product in products:
+        # Category rank score in [0,1], higher is better
+        if product.category_id in rank_map:
+            rank = rank_map[product.category_id]
+            category_score = (max_rank - rank) / max_rank if max_rank else 1.0
+        else:
+            category_score = 0.0
+
+        # Cosine similarity
+        product_vector = create_product_vector(product, user_preferences)
+        if np.linalg.norm(product_vector) > 0 and np.linalg.norm(user_vector) > 0:
+            cosine_sim = float(np.dot(product_vector, user_vector) / (np.linalg.norm(product_vector) * np.linalg.norm(user_vector)))
+        else:
+            cosine_sim = 0.0
+
+        # Combine with stronger weight on category priority
+        final_score = 3.0 * category_score + 1.0 * cosine_sim
+        scored.append((final_score, product))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    ordered_products = [p for _, p in scored]
+    return ordered_products[:limit] if limit else ordered_products
 
 def create_user_preference_vector(user_preferences):
     """Create an ideal user preference vector"""

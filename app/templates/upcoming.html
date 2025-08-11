@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upcoming Auctions</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% include 'bidder_nav.html' %}
+  <div class="content">
+    <h2>Upcoming Auctions</h2>
+    <div class="product-grid">
+      {% if products %}
+        {% for product in products %}
+        <div class="product-card">
+          {% if product.image_url %}
+          <div class="product-image">
+            <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+          </div>
+          {% else %}
+          <div class="product-image no-image"><span>No Image</span></div>
+          {% endif %}
+          <div class="product-details">
+            <h3>{{ product.name }}</h3>
+            <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+            <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+            <p class="product-seller">Seller: {{ product.seller.username }}</p>
+            <div class="status-badge upcoming">Upcoming</div>
+            <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+            {% if session.user_id %}
+            <button class="btn wishlist-btn" data-product-id="{{ product.id }}">
+              {% if user_wishlist_product_ids and product.id in user_wishlist_product_ids %}
+              Remove from Wishlist
+              {% else %}
+              Add to Wishlist
+              {% endif %}
+            </button>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="no-products">No upcoming auctions.</p>
+      {% endif %}
+    </div>
+  </div>
+  <script>
+    // Wishlist toggle
+    document.addEventListener('click', async function(e) {
+      const btn = e.target.closest('.wishlist-btn');
+      if (!btn) return;
+      const productId = btn.getAttribute('data-product-id');
+      const formData = new FormData();
+      formData.append('product_id', productId);
+      try {
+        const res = await fetch('/api/wishlist/toggle', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+          btn.textContent = data.wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist';
+        } else {
+          alert(data.message || 'Could not update wishlist');
+        }
+      } catch (err) {
+        alert('Network error while updating wishlist');
+      }
+    });
+  </script>
+</body>
+</html>

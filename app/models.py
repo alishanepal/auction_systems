@@ -176,3 +176,23 @@ class BidHistory(db.Model):
     
     def __repr__(self):
         return f'<BidHistory {self.id} user={self.user_id} product={self.product_id} count={self.bid_count}>'
+
+
+class Wishlist(db.Model):
+    __tablename__ = 'wishlist'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='wishlist_entries')
+    product = db.relationship('Product', foreign_keys=[product_id])
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'product_id', name='uq_wishlist_user_product'),
+    )
+
+    def __repr__(self):
+        return f'<Wishlist id={self.id} user={self.user_id} product={self.product_id}>'

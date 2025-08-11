@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, session
-from .models import db, Bid, Auction, Product, AuctionResult
+from .models import db, Bid, Auction, Product, AuctionResult, Wishlist
 from .utils import login_required, role_required, format_indian_currency
 from .recommendations import update_bid_history
 from datetime import datetime
@@ -73,6 +73,41 @@ def place_bid():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error placing bid: {str(e)}'})
+
+
+@api.route('/api/wishlist/toggle', methods=['POST'])
+@login_required
+@role_required('bidder')
+def toggle_wishlist():
+    product_id = request.form.get('product_id')
+    if not product_id:
+        return jsonify({'success': False, 'message': 'Missing product_id'})
+    try:
+        product_id = int(product_id)
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'success': False, 'message': 'Product not found'})
+
+        # Ensure it's tied to an upcoming auction
+        upcoming = Auction.query.filter_by(product_id=product_id).filter(
+            Auction.start_date > datetime.now()
+        ).first()
+        if not upcoming:
+            return jsonify({'success': False, 'message': 'Wishlist is only available for upcoming auctions'})
+
+        existing = Wishlist.query.filter_by(user_id=session['user_id'], product_id=product_id).first()
+        if existing:
+            db.session.delete(existing)
+            db.session.commit()
+            return jsonify({'success': True, 'wishlisted': False})
+        else:
+            new_w = Wishlist(user_id=session['user_id'], product_id=product_id)
+            db.session.add(new_w)
+            db.session.commit()
+            return jsonify({'success': True, 'wishlisted': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 @api.route('/api/process-auction-results', methods=['POST'])
 @login_required
