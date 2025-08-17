@@ -105,12 +105,8 @@ def create_product_vector(product, user_preferences):
 def get_recommended_products(user_id, limit=12):
     """Get personalized product recommendations for a user"""
     if not user_id:
-        # If no user, return recent live auctions
-        live_auctions = db.session.query(Auction).filter(
-            Auction.start_date <= func.now(),
-            Auction.end_date > func.now()
-        ).order_by(desc(Auction.created_at)).limit(limit).all()
-        return [auction.product for auction in live_auctions]
+        # If no user, return empty list (no recommendations)
+        return []
     
     # Get user preferences
     user_preferences = get_user_preferences(user_id)
@@ -185,6 +181,7 @@ def sort_products_for_user(products, user_id, limit=None):
         return []
 
     if not user_id:
+        # If no user, return products in original order (no personalization)
         return products[:limit] if limit else products
 
     # Build user preferences and vector

@@ -8,6 +8,45 @@
   {% include 'bidder_nav.html' %}
   <div class="content">
     <h2>Upcoming Auctions</h2>
+    
+    <!-- Personalized Recommendations for Logged-in Users -->
+    {% if user_id and recommended_products %}
+    <div class="recommendations-section">
+      <h3>Recommended for You</h3>
+      <div class="product-grid recommendations-grid">
+        {% for product in recommended_products %}
+        <div class="product-card recommended">
+          {% if product.image_url %}
+          <div class="product-image">
+            <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+          </div>
+          {% else %}
+          <div class="product-image no-image"><span>No Image</span></div>
+          {% endif %}
+          <div class="product-details">
+            <h3>{{ product.name }}</h3>
+            <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+            <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+            <p class="product-seller">Seller: {{ product.seller.username }}</p>
+            <div class="status-badge upcoming">Upcoming</div>
+            <div class="recommendation-badge">Recommended</div>
+            <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+            {% if session.user_id %}
+            <button class="btn wishlist-btn" data-product-id="{{ product.id }}">
+              {% if user_wishlist_product_ids and product.id in user_wishlist_product_ids %}
+              Remove from Wishlist
+              {% else %}
+              Add to Wishlist
+              {% endif %}
+            </button>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
     <div class="product-grid">
       {% if products %}
         {% for product in products %}

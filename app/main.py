@@ -37,9 +37,6 @@ def home():
     live_products = sort_products_for_user(live_products_all, user_id, limit=6)
     upcoming_products = sort_products_for_user(upcoming_products_all, user_id, limit=6)
     ended_products = [auction.product for auction in ended_auctions[:6]]
-    
-    # Get personalized recommendations
-    recommended_products = get_recommended_products(user_id, limit=6)
 
     # Compute trending auctions:
     # - For live: by number of bids
@@ -74,7 +71,6 @@ def home():
                            live_products=live_products,
                            upcoming_products=upcoming_products,
                            ended_products=ended_products,
-                           recommended_products=recommended_products,
                            trending_auctions=trending_auctions,
                            user_wishlist_product_ids=user_wishlist_product_ids,
                            format_indian_currency=format_indian_currency)
@@ -155,7 +151,17 @@ def live_auction():
         Auction.end_date > datetime.now()
     ).all()
     products = [a.product for a in live_auctions]
-    return render_template('live.html', products=products, format_indian_currency=format_indian_currency)
+    
+    # Get personalized recommendations for logged-in users
+    recommended_products = []
+    if user_id:
+        recommended_products = get_recommended_products(user_id, limit=3)
+    
+    return render_template('live.html', 
+                         products=products, 
+                         recommended_products=recommended_products,
+                         user_id=user_id,
+                         format_indian_currency=format_indian_currency)
 
 @main.route('/upcoming')
 def upcoming_auction():
@@ -167,7 +173,18 @@ def upcoming_auction():
     user_wishlist_product_ids = set()
     if user_id:
         user_wishlist_product_ids = {w.product_id for w in Wishlist.query.filter_by(user_id=user_id).all()}
-    return render_template('upcoming.html', products=products, user_wishlist_product_ids=user_wishlist_product_ids, format_indian_currency=format_indian_currency)
+    
+    # Get personalized recommendations for logged-in users
+    recommended_products = []
+    if user_id:
+        recommended_products = get_recommended_products(user_id, limit=3)
+    
+    return render_template('upcoming.html', 
+                         products=products, 
+                         recommended_products=recommended_products,
+                         user_id=user_id,
+                         user_wishlist_product_ids=user_wishlist_product_ids, 
+                         format_indian_currency=format_indian_currency)
 
 @main.route('/closed')
 def closed_auction():
