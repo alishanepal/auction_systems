@@ -1,0 +1,383 @@
+<!-- Proxy Bidding Component -->
+<div class="proxy-bidding-section" id="proxy-bidding-section">
+    <h3>🤖 Proxy Bidding</h3>
+    <div class="proxy-info">
+        <p><strong>How it works:</strong> Set your maximum bid amount and let our system automatically bid for you up to that limit.</p>
+        <p><strong>Benefits:</strong> Never miss an auction, bid optimally, and stay ahead of competitors automatically.</p>
+    </div>
+    
+    <!-- Current Proxy Bid Status -->
+    <div class="proxy-status" id="proxy-status" style="display: none;">
+        <div class="status-card">
+            <h4>Current Proxy Bid</h4>
+            <div class="status-details">
+                <p><strong>Maximum Amount:</strong> ₹<span id="proxy-amount">0</span></p>
+                <p><strong>Remaining Budget:</strong> ₹<span id="remaining-budget">0</span></p>
+                <p><strong>Status:</strong> <span id="proxy-status-text">Active</span></p>
+            </div>
+            <div class="proxy-actions">
+                <button class="btn btn-warning" onclick="editProxyBid()">Edit Proxy Bid</button>
+                <button class="btn btn-danger" onclick="removeProxyBid()">Remove Proxy Bid</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Set Proxy Bid Form -->
+    <div class="proxy-form" id="proxy-form">
+        <div class="form-group">
+            <label for="proxy-max-amount">Maximum Bid Amount (₹)</label>
+            <input type="number" id="proxy-max-amount" name="max_amount" min="0" step="1" 
+                   placeholder="Enter your maximum bid amount" required>
+            <small class="form-text">This is the maximum amount you're willing to pay for this item.</small>
+        </div>
+        
+        <div class="proxy-preview" id="proxy-preview" style="display: none;">
+            <h4>Proxy Bid Preview</h4>
+            <div class="preview-details">
+                <p><strong>Starting Bid:</strong> ₹<span id="preview-starting-bid">0</span></p>
+                <p><strong>Your Maximum:</strong> ₹<span id="preview-max-amount">0</span></p>
+                <p><strong>Initial Proxy Bid:</strong> ₹<span id="preview-initial-bid">0</span></p>
+                <p><strong>System will automatically bid up to:</strong> ₹<span id="preview-max-amount-display">0</span></p>
+            </div>
+        </div>
+        
+        <div class="proxy-actions">
+            <button class="btn btn-primary" onclick="setProxyBid()" id="set-proxy-btn">Set Proxy Bid</button>
+            <button class="btn btn-secondary" onclick="cancelProxyBid()" id="cancel-proxy-btn" style="display: none;">Cancel</button>
+        </div>
+    </div>
+    
+    <!-- Proxy Bid History -->
+    <div class="proxy-history" id="proxy-history" style="display: none;">
+        <h4>Proxy Bid Activity</h4>
+        <div class="history-list" id="history-list">
+            <!-- Proxy bid history will be populated here -->
+        </div>
+    </div>
+</div>
+
+<style>
+.proxy-bidding-section {
+    background-color: #f8f9fa;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.proxy-bidding-section h3 {
+    color: #28a745;
+    margin-top: 0;
+    border-bottom: 2px solid #28a745;
+    padding-bottom: 10px;
+}
+
+.proxy-info {
+    background-color: #d4edda;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.proxy-info p {
+    margin: 5px 0;
+    color: #155724;
+}
+
+.status-card {
+    background-color: #e8f5e8;
+    border: 1px solid #28a745;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.status-details p {
+    margin: 5px 0;
+}
+
+.proxy-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.proxy-form .form-group {
+    margin-bottom: 15px;
+}
+
+.proxy-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.proxy-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.proxy-preview {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.preview-details p {
+    margin: 5px 0;
+}
+
+.proxy-history {
+    margin-top: 20px;
+}
+
+.history-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.history-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.history-item .time {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.history-item .action {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.form-text {
+    font-size: 0.875em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+</style>
+
+<script>
+let currentAuctionId = null;
+let currentStartingBid = 0;
+
+// Initialize proxy bidding component
+function initProxyBidding(auctionId, startingBid) {
+    currentAuctionId = auctionId;
+    currentStartingBid = startingBid;
+    
+    // Load current proxy bid status
+    loadProxyBidStatus();
+    
+    // Add event listener for max amount input
+    document.getElementById('proxy-max-amount').addEventListener('input', updateProxyPreview);
+}
+
+// Load current proxy bid status
+function loadProxyBidStatus() {
+    if (!currentAuctionId) return;
+    
+    fetch(`/api/proxy-bid/get/${currentAuctionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.has_proxy) {
+                showProxyStatus(data);
+            } else {
+                showProxyForm();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading proxy bid status:', error);
+            showProxyForm();
+        });
+}
+
+// Show proxy bid status
+function showProxyStatus(data) {
+    document.getElementById('proxy-status').style.display = 'block';
+    document.getElementById('proxy-form').style.display = 'none';
+    
+    document.getElementById('proxy-amount').textContent = data.proxy_amount.toFixed(2);
+    document.getElementById('remaining-budget').textContent = data.remaining_budget.toFixed(2);
+    document.getElementById('proxy-status-text').textContent = data.is_winning ? 'Winning' : 'Active';
+}
+
+// Show proxy bid form
+function showProxyForm() {
+    document.getElementById('proxy-status').style.display = 'none';
+    document.getElementById('proxy-form').style.display = 'block';
+    document.getElementById('proxy-preview').style.display = 'none';
+}
+
+// Update proxy bid preview
+function updateProxyPreview() {
+    const maxAmount = parseFloat(document.getElementById('proxy-max-amount').value) || 0;
+    
+    if (maxAmount > currentStartingBid) {
+        document.getElementById('proxy-preview').style.display = 'block';
+        document.getElementById('preview-starting-bid').textContent = currentStartingBid.toFixed(2);
+        document.getElementById('preview-max-amount').textContent = maxAmount.toFixed(2);
+        document.getElementById('preview-max-amount-display').textContent = maxAmount.toFixed(2);
+        
+        // Calculate initial proxy bid (minimum bid needed)
+        const initialBid = currentStartingBid + calculateMinimumIncrement(currentStartingBid);
+        document.getElementById('preview-initial-bid').textContent = initialBid.toFixed(2);
+    } else {
+        document.getElementById('proxy-preview').style.display = 'none';
+    }
+}
+
+// Set proxy bid
+function setProxyBid() {
+    const maxAmount = parseFloat(document.getElementById('proxy-max-amount').value);
+    
+    if (!maxAmount || maxAmount <= 0) {
+        alert('Please enter a valid maximum amount');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('auction_id', currentAuctionId);
+    formData.append('max_amount', maxAmount);
+    
+    fetch('/api/proxy-bid/set', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadProxyBidStatus();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error setting proxy bid:', error);
+        alert('Error setting proxy bid. Please try again.');
+    });
+}
+
+// Edit proxy bid
+function editProxyBid() {
+    showProxyForm();
+    // Load current proxy amount into the form
+    fetch(`/api/proxy-bid/get/${currentAuctionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.has_proxy) {
+                document.getElementById('proxy-max-amount').value = data.proxy_amount;
+                updateProxyPreview();
+            }
+        });
+}
+
+// Remove proxy bid
+function removeProxyBid() {
+    if (!confirm('Are you sure you want to remove your proxy bid?')) {
+        return;
+    }
+    
+    fetch(`/api/proxy-bid/remove/${currentAuctionId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadProxyBidStatus();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error removing proxy bid:', error);
+        alert('Error removing proxy bid. Please try again.');
+    });
+}
+
+// Cancel proxy bid form
+function cancelProxyBid() {
+    document.getElementById('proxy-max-amount').value = '';
+    document.getElementById('proxy-preview').style.display = 'none';
+    loadProxyBidStatus();
+}
+
+// Calculate minimum bid increment (matches server-side calculation)
+function calculateMinimumIncrement(currentBid) {
+    let pct;
+    if (currentBid < 10000) {
+        pct = 0.05;
+    } else if (currentBid < 100000) {
+        pct = 0.03;
+    } else if (currentBid < 1000000) {
+        pct = 0.02;
+    } else if (currentBid < 10000000) {
+        pct = 0.015;
+    } else {
+        pct = 0.01;
+    }
+    
+    const increment = currentBid * pct;
+    const roundedIncrement = Math.round(increment);
+    return roundedIncrement >= 1 ? roundedIncrement : 1;
+}
+</script>
+

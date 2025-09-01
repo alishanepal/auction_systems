@@ -154,12 +154,12 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="starting_bid">Starting Bid (Rs) *</label>
-                        <input type="number" id="starting_bid" name="starting_bid" step="0.01" min="0.01" required>
+                        <input type="number" id="starting_bid" name="starting_bid" step="1" min="1" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="reserve_price">Reserve Price (Rs)</label>
-                        <input type="number" id="reserve_price" name="reserve_price" step="0.01" min="0.01">
+                        <input type="number" id="reserve_price" name="reserve_price" step="1" min="1">
                     </div>
                     
                     <div class="form-group">
@@ -254,8 +254,10 @@
                 pct = 0.01;
             }
             let minimumInterval = startingBid * pct;
+            // Round to nearest whole number to avoid decimal bids
+            minimumInterval = Math.round(minimumInterval);
             if (minimumInterval < 1) minimumInterval = 1;
-            document.getElementById('minimum_interval_display').value = `Rs ${minimumInterval.toFixed(2)}`;
+            document.getElementById('minimum_interval_display').value = `Rs ${minimumInterval.toFixed(0)}`;
         }
         
         function validateTimes() {

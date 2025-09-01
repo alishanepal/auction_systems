@@ -346,17 +346,21 @@
                         <div class="bid-info">
                             <p><strong>Current Highest Bid:</strong> <span id="current-highest-bid" class="highlight">{{ format_indian_currency(current_highest_amount) }}</span></p>
                             <p><strong>Minimum Bid Increment:</strong> {{ format_indian_currency(initial_increment) }}</p>
-                            <p><strong>Next Minimum Bid:</strong> <span id="current-minimum-bid" class="highlight">{{ format_indian_currency(current_highest_amount + initial_increment) }}</span></p>
+                            <p><strong>Next Minimum Bid:</strong> <span id="current-minimum-bid" class="highlight">{{ format_indian_currency(minimum_bid_amount) }}</span></p>
                         </div>
                         <form id="bidForm" class="bid-form">
                             <div class="form-group">
                                 <label for="bid-amount">Your Bid (Rs)</label>
-                                <input type="number" id="bid-amount" name="bid_amount" step="0.01" min="{{ current_highest_amount + initial_increment }}" required>
-                                <small style="color: #666; font-size: 12px;">Minimum bid: <span id="min-bid-amount">{{ format_indian_currency(current_highest_amount + initial_increment) }}</span></small>
+                                <input type="number" id="bid-amount" name="bid_amount" step="1" min="{{ minimum_bid_amount }}" required>
+                                <small style="color: #666; font-size: 12px;">Minimum bid: <span id="min-bid-amount">{{ format_indian_currency(minimum_bid_amount) }}</span></small>
                             </div>
                             <button type="submit" class="btn bid-btn">Place Bid</button>
                         </form>
                     </div>
+                    
+                    <!-- Proxy Bidding Section -->
+                    {% include 'proxy_bidding_component.html' %}
+                    
                     {% else %}
                     <div class="bidding-notice">
                         <p>You need to be logged in as a bidder to place bids.</p>
@@ -364,9 +368,23 @@
                     </div>
                     {% endif %}
                 {% elif auction.status == 'upcoming' %}
-                <div class="upcoming-notice">
-                    <p>This auction has not started yet.</p>
-                </div>
+                    {% if session.get('role') == 'bidder' %}
+                    <div class="upcoming-notice">
+                        <p>This auction has not started yet.</p>
+                        <p><strong>Starting Bid:</strong> {{ format_indian_currency(product.starting_bid) }}</p>
+                        <p><strong>Start Time:</strong> {{ auction.start_date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    </div>
+                    
+                    <!-- Proxy Bidding Section for Upcoming Auctions -->
+                    {% include 'proxy_bidding_component.html' %}
+                    
+                    {% else %}
+                    <div class="upcoming-notice">
+                        <p>This auction has not started yet.</p>
+                        <p>You need to be logged in as a bidder to set proxy bids.</p>
+                        <button onclick="openModal('loginModal')" class="btn">Login</button>
+                    </div>
+                    {% endif %}
                 {% else %}
                 <div class="ended-notice">
                     <p>This auction has ended.</p>
@@ -567,8 +585,45 @@
                 }
             }
             
+            // Calculate minimum bid increment (matches server-side calculation)
+            function calculateMinimumIncrement(amount) {
+                let pct;
+                if (amount < 10000) {
+                    pct = 0.05;
+                } else if (amount < 100000) {
+                    pct = 0.03;
+                } else if (amount < 1000000) {
+                    pct = 0.02;
+                } else if (amount < 10000000) {
+                    pct = 0.015;
+                } else {
+                    pct = 0.01;
+                }
+                
+                const increment = amount * pct;
+                const roundedIncrement = Math.round(increment);
+                return roundedIncrement >= 1 ? roundedIncrement : 1;
+            }
+            
+            // Calculate minimum bid amount (matches server-side calculation)
+            function calculateMinimumBid(currentAmount) {
+                // Handle edge cases
+                if (currentAmount <= 0) {
+                    return 1;
+                }
+                
+                // Calculate minimum increment based on current amount
+                const increment = calculateMinimumIncrement(currentAmount);
+                
+                // Add increment to current amount and round to nearest whole number
+                const minimumBid = Math.round(currentAmount + increment);
+                
+                return minimumBid;
+            }
+            
             function updateMinimumBid() {
-                const newMinimumBid = currentHighestBid + minimumInterval;
+                // Recalculate minimum bid using the new function
+                const newMinimumBid = calculateMinimumBid(currentHighestBid);
                 minBidAmountSpan.textContent = formatIndianNumber(newMinimumBid);
                 currentMinimumBidSpan.textContent = formatIndianNumber(newMinimumBid);
                 document.getElementById('current-highest-bid').textContent = formatIndianNumber(currentHighestBid);
@@ -620,7 +675,8 @@
                     event.preventDefault();
                     
                     const bidAmount = parseFloat(bidAmountInput.value);
-                    const minimumBid = currentHighestBid + minimumInterval;
+                    // Calculate minimum bid using the new function
+                    const minimumBid = calculateMinimumBid(currentHighestBid);
                     
                     if (bidAmount < minimumBid) {
                         showNotification(`Your bid must be at least ${formatIndianNumber(minimumBid)}`, 'error');
@@ -824,6 +880,19 @@
                 console.error('Signup error:', error);
             }
         }
+        
+        // Initialize Proxy Bidding Component
+        {% if session.get('role') == 'bidder' %}
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize proxy bidding with auction ID and starting bid
+            const auctionId = {{ auction.id }};
+            const startingBid = {{ product.starting_bid }};
+            
+            if (typeof initProxyBidding === 'function') {
+                initProxyBidding(auctionId, startingBid);
+            }
+        });
+        {% endif %}
     </script>
 </body>
 </html>

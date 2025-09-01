@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session
 from .models import db, Product, Auction, Bid, AuctionResult, Wishlist
-from .utils import format_indian_currency, calculate_minimum_increment
+from .utils import format_indian_currency, calculate_minimum_increment, calculate_minimum_bid
 from .recommendations import get_recommended_products, sort_products_for_user
 from sqlalchemy import desc
 from datetime import datetime
@@ -119,7 +119,10 @@ def view_auction(auction_id):
     # Get current highest bid
     current_highest_bid = Bid.query.filter_by(auction_id=auction_id).order_by(Bid.bid_amount.desc()).first()
     current_highest_amount = current_highest_bid.bid_amount if current_highest_bid else product.starting_bid
-    initial_increment = calculate_minimum_increment(current_highest_amount)
+    # Calculate the minimum bid amount (rounded current + increment)
+    minimum_bid_amount = calculate_minimum_bid(current_highest_amount)
+    # Calculate the increment for display purposes
+    initial_increment = calculate_minimum_increment(round(current_highest_amount))
     
     # Get auction result if auction has ended
     auction_result = None
@@ -138,7 +141,8 @@ def view_auction(auction_id):
                          product=product, 
                          current_highest_bid=current_highest_bid,
                          current_highest_amount=current_highest_amount,
-                          initial_increment=initial_increment,
+                         initial_increment=initial_increment,
+                         minimum_bid_amount=minimum_bid_amount,
                          auction_result=auction_result,
                          winning_bid=winning_bid,
                          format_indian_currency=format_indian_currency)

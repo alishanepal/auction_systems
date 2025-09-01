@@ -196,3 +196,73 @@ class Wishlist(db.Model):
 
     def __repr__(self):
         return f'<Wishlist id={self.id} user={self.user_id} product={self.product_id}>'
+
+
+class BidderMinimumAmount(db.Model):
+    __tablename__ = 'bidder_minimum_amounts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    bidder_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auctions.id'), nullable=False)
+    minimum_amount = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    bidder = db.relationship('User', foreign_keys=[bidder_id], backref='minimum_amounts')
+    product = db.relationship('Product', foreign_keys=[product_id])
+    auction = db.relationship('Auction', foreign_keys=[auction_id])
+    
+    # Get seller through product relationship
+    @property
+    def seller(self):
+        return self.product.seller if self.product else None
+    
+    # Get seller_id through product relationship
+    @property
+    def seller_id(self):
+        return self.product.seller_id if self.product else None
+    
+    __table_args__ = (
+        db.UniqueConstraint('bidder_id', 'auction_id', name='uq_bidder_minimum_amount_bidder_auction'),
+    )
+    
+    def __repr__(self):
+        return f'<BidderMinimumAmount id={self.id} bidder={self.bidder_id} auction={self.auction_id} amount={self.minimum_amount}>'
+    
+    @classmethod
+    def set_minimum_amount(cls, bidder_id, auction_id, product_id, minimum_amount):
+        """Set or update minimum amount for a bidder on a specific auction"""
+        existing = cls.query.filter_by(bidder_id=bidder_id, auction_id=auction_id).first()
+        if existing:
+            existing.minimum_amount = minimum_amount
+            existing.updated_at = datetime.now()
+            db.session.commit()
+            return existing
+        else:
+            new_minimum = cls(
+                bidder_id=bidder_id,
+                auction_id=auction_id,
+                product_id=product_id,
+                minimum_amount=minimum_amount
+            )
+            db.session.add(new_minimum)
+            db.session.commit()
+            return new_minimum
+    
+    @classmethod
+    def get_minimum_amount(cls, bidder_id, auction_id):
+        """Get minimum amount for a bidder on a specific auction"""
+        record = cls.query.filter_by(bidder_id=bidder_id, auction_id=auction_id).first()
+        return record.minimum_amount if record else None
+    
+    @classmethod
+    def get_bidder_minimums(cls, bidder_id):
+        """Get all minimum amounts set by a specific bidder"""
+        return cls.query.filter_by(bidder_id=bidder_id).all()
+    
+    @classmethod
+    def get_auction_minimums(cls, auction_id):
+        """Get all minimum amounts set for a specific auction"""
+        return cls.query.filter_by(auction_id=auction_id).all()

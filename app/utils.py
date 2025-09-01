@@ -9,7 +9,7 @@ def calculate_minimum_increment(amount: float) -> float:
     - 1,00,000..9,99,999 => 2%
     - 10,00,000..99,99,999 => 1.5%
     - >= 1,00,00,000 => 1%
-    Always returns at least 1.0
+    Always returns at least 1.0, rounded to nearest whole number
     """
     try:
         amt = float(amount or 0)
@@ -28,7 +28,25 @@ def calculate_minimum_increment(amount: float) -> float:
         pct = 0.01
 
     increment = amt * pct
-    return increment if increment >= 1.0 else 1.0
+    # Round to nearest whole number to avoid decimal bids
+    rounded_increment = round(increment)
+    return rounded_increment if rounded_increment >= 1.0 else 1.0
+
+def calculate_minimum_bid(current_amount: float) -> float:
+    """Calculate the minimum bid amount by adding minimum increment to current amount and rounding to whole number.
+    This ensures no decimal bids while maintaining proper minimum increment logic.
+    """
+    # Handle edge cases
+    if current_amount <= 0:
+        return 1
+    
+    # Calculate minimum increment based on current amount
+    increment = calculate_minimum_increment(current_amount)
+    
+    # Add increment to current amount and round to nearest whole number
+    minimum_bid = round(current_amount + increment)
+    
+    return minimum_bid
 
 def format_indian_currency(amount):
     """Format amount in Indian currency style (1,00,000.00)"""

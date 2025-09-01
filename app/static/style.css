@@ -352,7 +352,7 @@ body.home-page .content {
 }
 
 .bid-form input[type="number"] {
-    width: 100%;
+    width: 500%;
     padding: 12px 15px;
     border: 2px solid #ddd;
     border-radius: 8px;

@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, session
 from .models import db, Bid, Auction, Product, AuctionResult, Wishlist
-from .utils import login_required, role_required, format_indian_currency, calculate_minimum_increment
+from .utils import login_required, role_required, format_indian_currency, calculate_minimum_increment, calculate_minimum_bid
 from .recommendations import update_bid_history
+from .proxy_bidding import ProxyBiddingSystem
 from datetime import datetime
 
 api = Blueprint('api', __name__)
@@ -33,8 +34,11 @@ def place_bid():
         current_highest_bid = Bid.query.filter_by(auction_id=auction_id).order_by(Bid.bid_amount.desc()).first()
         current_highest_amount = current_highest_bid.bid_amount if current_highest_bid else auction.product.starting_bid
         
-        # Calculate minimum bid amount using tiered increment
-        minimum_bid = current_highest_amount + calculate_minimum_increment(current_highest_amount)
+        # Calculate minimum bid amount using the new function that rounds current amount first
+        minimum_bid = calculate_minimum_bid(current_highest_amount)
+        
+        # Round bid amount to nearest whole number
+        bid_amount = round(bid_amount)
         
         # Validate bid amount
         if bid_amount < minimum_bid:
@@ -61,18 +65,108 @@ def place_bid():
         # Update bid history for recommendations
         update_bid_history(session['user_id'], auction.product_id, auction_id, bid_amount)
         
-        return jsonify({
+        # Process proxy bids for this auction
+        executed_proxy_bids = ProxyBiddingSystem.process_proxy_bids_for_auction(auction_id)
+        
+        response_data = {
             'success': True, 
             'message': f'Bid of {format_indian_currency(bid_amount)} placed successfully!',
             'new_highest_bid': bid_amount,
-            'new_minimum_bid': bid_amount + calculate_minimum_increment(bid_amount)
-        })
+            'new_minimum_bid': calculate_minimum_bid(bid_amount),
+            'proxy_bids_executed': len(executed_proxy_bids)
+        }
+        
+        if executed_proxy_bids:
+            response_data['proxy_bids'] = executed_proxy_bids
+        
+        return jsonify(response_data)
         
     except ValueError:
         return jsonify({'success': False, 'message': 'Invalid bid amount'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error placing bid: {str(e)}'})
+
+
+@api.route('/api/proxy-bid/set', methods=['POST'])
+@login_required
+@role_required('bidder')
+def set_proxy_bid():
+    """Set or update a proxy bid for an auction"""
+    auction_id = request.form.get('auction_id')
+    max_amount = request.form.get('max_amount')
+    
+    if not auction_id or not max_amount:
+        return jsonify({'success': False, 'message': 'Missing required fields'})
+    
+    try:
+        auction_id = int(auction_id)
+        max_amount = round(float(max_amount))
+        
+        # Get auction and product info
+        auction = Auction.query.get(auction_id)
+        if not auction:
+            return jsonify({'success': False, 'message': 'Auction not found'})
+        
+        # Check if user is not setting proxy bid on their own auction
+        if auction.product.seller_id == session['user_id']:
+            return jsonify({'success': False, 'message': 'You cannot set proxy bids on your own auction'})
+        
+        result = ProxyBiddingSystem.set_proxy_bid(
+            bidder_id=session['user_id'],
+            auction_id=auction_id,
+            product_id=auction.product_id,
+            max_amount=max_amount
+        )
+        
+        return jsonify(result)
+        
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid maximum amount'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error setting proxy bid: {str(e)}'})
+
+
+@api.route('/api/proxy-bid/get/<int:auction_id>', methods=['GET'])
+@login_required
+@role_required('bidder')
+def get_proxy_bid(auction_id):
+    """Get proxy bid status for a specific auction"""
+    try:
+        result = ProxyBiddingSystem.get_proxy_bid_status(session['user_id'], auction_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error getting proxy bid: {str(e)}'})
+
+
+@api.route('/api/proxy-bid/remove/<int:auction_id>', methods=['POST'])
+@login_required
+@role_required('bidder')
+def remove_proxy_bid(auction_id):
+    """Remove a proxy bid for a specific auction"""
+    try:
+        result = ProxyBiddingSystem.remove_proxy_bid(session['user_id'], auction_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error removing proxy bid: {str(e)}'})
+
+
+@api.route('/api/proxy-bid/all', methods=['GET'])
+@login_required
+@role_required('bidder')
+def get_all_proxy_bids():
+    """Get all proxy bids for the current user"""
+    try:
+        proxy_bids = ProxyBiddingSystem.get_all_proxy_bids_for_user(session['user_id'])
+        return jsonify({
+            'success': True,
+            'proxy_bids': proxy_bids
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error getting proxy bids: {str(e)}'})
 
 
 @api.route('/api/wishlist/toggle', methods=['POST'])

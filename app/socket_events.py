@@ -2,6 +2,7 @@ from flask import request
 from flask_socketio import emit, join_room
 from . import socketio
 from .models import db, Auction, Product, AuctionResult, Bid
+from .proxy_bidding import ProxyBiddingSystem
 from datetime import datetime
 import threading
 import time
@@ -53,6 +54,10 @@ def update_auction_statuses():
                 'product_name': auction.product.name
             })
             
+            # If auction just went live, process proxy bids
+            if current_status == 'live' and prev_status == 'upcoming':
+                process_proxy_bids_for_live_auction(auction)
+            
             # If auction just ended, process the results
             if current_status == 'ended' and prev_status == 'live':
                 process_auction_result(auction)
@@ -64,6 +69,26 @@ def update_auction_statuses():
     if updated_auctions:
         # Broadcast updates to all clients
         socketio.emit('auctions_updated', {'auctions': updated_auctions})
+
+def process_proxy_bids_for_live_auction(auction):
+    """Process proxy bids when an auction goes live"""
+    try:
+        print(f"Processing proxy bids for auction {auction.id} that just went live")
+        
+        # Get all proxy bids for this auction
+        proxy_bids = ProxyBiddingSystem.process_proxy_bids_for_auction(auction.id)
+        
+        if proxy_bids:
+            print(f"Executed {len(proxy_bids)} proxy bids for auction {auction.id}")
+            
+            # Broadcast proxy bid executions to auction room
+            socketio.emit('proxy_bids_executed', {
+                'auction_id': auction.id,
+                'proxy_bids': proxy_bids
+            }, room=f'auction_{auction.id}')
+        
+    except Exception as e:
+        print(f"Error processing proxy bids for live auction {auction.id}: {e}")
 
 def process_auction_result(auction):
     """Process auction result for a specific auction"""

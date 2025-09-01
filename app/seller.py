@@ -104,6 +104,12 @@ def process_auction():
     start_time = request.form.get('start_time')
     end_time = request.form.get('end_time')
     
+    # Round starting bid and reserve price to whole numbers
+    if starting_bid:
+        starting_bid = round(float(starting_bid))
+    if reserve_price:
+        reserve_price = round(float(reserve_price))
+    
     # Debug: Print form data
     print(f"Form data received: {dict(request.form)}")
     print(f"Files received: {dict(request.files)}")
