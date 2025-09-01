@@ -4,10 +4,24 @@
 		{
 			"label": "Flask: Run Development Server",
 			"type": "shell",
-			"command": "C:/flask/online_auction_system/venv/Scripts/python.exe run.py",
+		"command": "c:/flask/online_auction/venv/Scripts/python.exe run.py",
 			"isBackground": true,
 			"group": "build",
 			"problemMatcher": []
+		},
+		{
+			"label": "Flask: Run Development Server",
+			"type": "shell",
+			"command": "c:/flask/online_auction/venv/Scripts/python.exe run.py",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Flask: Run Development Server",
+			"type": "shell",
+			"command": "c:/flask/online_auction/venv/Scripts/python.exe run.py",
+			"isBackground": true,
+			"group": "build"
 		}
 	]
 }

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, session
-from .models import db, User, Product, Auction, Bid, Category, Subcategory
+from .models import db, User, Product, Auction, Bid, Category, Subcategory, AuctionResult
 from .utils import login_required, role_required, format_indian_currency
 from datetime import datetime, timedelta
 
@@ -358,7 +358,7 @@ def approve_user(user_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error approving user: {str(e)}'}), 500
-
+ 
 @admin.route('/api/users/<int:user_id>/reject', methods=['POST'])
 @login_required
 @role_required('admin')
