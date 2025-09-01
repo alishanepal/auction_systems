@@ -1,7 +1,11 @@
 from flask import Blueprint, render_template, session
 from .models import db, Product, Auction, Bid, AuctionResult, Wishlist
 from .utils import format_indian_currency, calculate_minimum_increment, calculate_minimum_bid, login_required
-from .recommendations import get_recommended_products, sort_products_for_user
+from .recommender import (
+    get_recommended_products, 
+    sort_products_for_user, 
+    get_category_based_recommendations
+)
 from sqlalchemy import desc
 from datetime import datetime
 
@@ -66,6 +70,12 @@ def home():
     user_wishlist_product_ids = set()
     if user_id:
         user_wishlist_product_ids = {w.product_id for w in Wishlist.query.filter_by(user_id=user_id).all()}
+    
+    # Get personalized recommendations for logged-in users
+    recommended_products = []
+    recommendation_details = {}
+    if user_id:
+        recommended_products, recommendation_details = get_recommended_products(user_id, limit=6)
 
     return render_template('home.html', 
                            live_products=live_products,
@@ -73,6 +83,8 @@ def home():
                            ended_products=ended_products,
                            trending_auctions=trending_auctions,
                            user_wishlist_product_ids=user_wishlist_product_ids,
+                           recommended_products=recommended_products,
+                           recommendation_details=recommendation_details,
                            format_indian_currency=format_indian_currency)
 
 
@@ -262,5 +274,36 @@ def auction_bid_history(auction_id):
                          user_bids=user_bids,
                          all_bids=all_bids,
                          current_highest_bid=current_highest_bid,
-                         is_winning=is_winning,
+                                                    is_winning=is_winning,
+                           format_indian_currency=format_indian_currency)
+
+
+@main.route('/recommendations')
+@login_required
+def comprehensive_recommendations():
+    """Comprehensive recommendations page showing different types of recommendations"""
+    user_id = session.get('user_id')
+    
+    # Get different types of recommendations
+    personalized_recs, personalized_details = get_recommended_products(user_id, limit=6)
+    category_recs, category_details = get_category_based_recommendations(user_id, limit=6)
+    
+    # Combine all recommendation details
+    all_recommendations = {
+        'personalized': {
+            'products': personalized_recs,
+            'details': personalized_details,
+            'title': 'Personalized Recommendations',
+            'description': 'Based on your bidding history and product preferences using cosine similarity'
+        },
+        'category_based': {
+            'products': category_recs,
+            'details': category_details,
+            'title': 'Category-Based Recommendations',
+            'description': 'Based on your preferred product categories'
+        }
+    }
+    
+    return render_template('recommendations.html',
+                         recommendations=all_recommendations,
                          format_indian_currency=format_indian_currency)

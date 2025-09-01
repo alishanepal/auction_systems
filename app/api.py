@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 from .models import db, Bid, Auction, Product, AuctionResult, Wishlist
 from .utils import login_required, role_required, format_indian_currency, calculate_minimum_increment, calculate_minimum_bid
-from .recommendations import update_bid_history
+from app.recommender import update_bid_history
 from .proxy_bidding import ProxyBiddingSystem
 from datetime import datetime
 

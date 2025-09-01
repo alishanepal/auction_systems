@@ -613,90 +613,125 @@ body.home-page .content {
     position: sticky;
     top: 0;
     z-index: 100;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
 }
 
 .upper-navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #dcd5ea;
-    padding: 10px 20px;
-    color: #333;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: transparent;
+    padding: 15px 30px;
+    color: #2c3e50;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .upper-navbar .brand {
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 24px;
+    font-weight: 700;
 }
 
 .upper-navbar .brand a {
-    color: #333;
+    color: #2c3e50;
     text-decoration: none;
+    transition: all 0.3s ease;
+    background: linear-gradient(45deg, #4a90e2, #5a6bff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .upper-navbar .search {
     flex: 1;
     text-align: center;
+    max-width: 600px;
+    margin: 0 20px;
 }
 
 .upper-navbar .search input[type="text"] {
-    padding: 8px;
-    width: 60%;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+    padding: 12px 20px;
+    width: 70%;
+    border-radius: 25px;
+    border: 2px solid #e1e8ed;
     font-size: 14px;
     box-sizing: border-box;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.upper-navbar .search input[type="text"]:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74,144,226,0.1);
+    background-color: #ffffff;
 }
 
 .upper-navbar .search button {
-    padding: 8px 16px;
-    margin-left: 5px;
+    padding: 12px 24px;
+    margin-left: 10px;
     border: none;
-    border-radius: 4px;
-    background-color: #4a90e2;
+    border-radius: 25px;
+    background: linear-gradient(45deg, #4a90e2, #5a6bff);
     color: white;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .upper-navbar .search button:hover {
-    background-color: #357abd;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(74,144,226,0.2);
 }
 
 .upper-navbar .auth-links a {
-    color: #333;
-    margin-left: 15px;
+    color: #2c3e50;
+    margin-left: 20px;
     text-decoration: none;
-    font-weight: bold;
-    transition: color 0.2s;
+    font-weight: 600;
+    transition: all 0.3s ease;
     cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 20px;
 }
 
 .upper-navbar .auth-links a:hover {
     color: #4a90e2;
+    background-color: rgba(74,144,226,0.1);
 }
 
 .lower-navbar {
-    background-color: #c9c6e1;
-    padding: 10px 20px;
+    background-color: transparent;
+    padding: 12px 30px;
     display: flex;
-    gap: 30px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    gap: 40px;
+    justify-content: center;
+    align-items: center;
 }
 
 .lower-navbar a {
-    color: #333;
+    color: #2c3e50;
     text-decoration: none;
-    font-weight: bold;
-    padding-bottom: 3px;
-    transition: all 0.2s;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    font-size: 15px;
 }
 
-.lower-navbar a:hover,
-.lower-navbar a.active {
-    border-bottom: 2px solid #4a90e2;
+.lower-navbar a:hover {
     color: #4a90e2;
+    background-color: rgba(74,144,226,0.1);
+}
+
+.lower-navbar a.active {
+    color: #4a90e2;
+    background: linear-gradient(45deg, rgba(74,144,226,0.1), rgba(90,107,255,0.1));
+    font-weight: 700;
 }
 
 /* Bottom Navbar for Auction Categories */
@@ -983,4 +1018,40 @@ body.home-page .content {
     letter-spacing: 0.5px;
     box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
     z-index: 2;
+}
+
+/* Recommendation Scores Styling */
+.recommendation-scores {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 3px solid #007bff;
+    margin: 10px 0;
+}
+
+.recommendation-scores .badge {
+    font-size: 0.7rem;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    display: inline-block;
+}
+
+.recommendation-scores small {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Recommended Products Section Styling */
+.recommended-products h2:after {
+    background: linear-gradient(90deg, #4a90e2, #2ecc71);
+}
+
+.product-card.recommended {
+    border: 2px solid #4a90e2;
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.15);
+}
+
+.product-card.recommended:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(74, 144, 226, 0.25);
 }

@@ -9,11 +9,54 @@
     {% include 'bidder_nav.html' %}
     <div class="content">
         <div class="home-banner">
+       
             <h1>Welcome to the Online Auction System</h1>
             <p>Discover unique items, bid on treasures, and sell your valuables in our secure online marketplace.</p>
         </div>
-        
-
+ 
+        <!-- Recommended Products Section -->
+        {% if recommended_products %}
+        <div id="recommended-products" class="auction-section recommended-products">
+            <h2>Recommended For You</h2>
+            <div class="product-grid">
+            {% for product in recommended_products %}
+                <div class="product-card recommended">
+                    {% if product.image_url %}
+                        <div class="product-image">
+                            <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+                        </div>
+                    {% else %}
+                        <div class="product-image no-image">
+                            <span>No Image</span>
+                        </div>
+                    {% endif %}
+                    <div class="product-details">
+                        <h3>{{ product.name }}</h3>
+                        <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+                        <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                        <p class="product-seller">Seller: {{ product.seller.username }}</p>
+                        {% if product.id in recommendation_details %}
+                        <div class="recommendation-scores">
+                            <small class="text-muted">Recommendation Scores:</small>
+                            <div class="mt-1">
+                                {% for score_name, score_value in recommendation_details[product.id].items() %}
+                                <span class="badge bg-info me-1 mb-1">
+                                    {{ score_name.replace('_', ' ').title() }}: {{ score_value }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+            <div class="text-center mt-3">
+                <a href="/recommendations" class="btn btn-primary">View All Recommendations</a>
+            </div>
+        </div>
+        {% endif %}
         
         <!-- Live Auctions Section -->
         <div id="live-auctions" class="auction-section live-auctions">

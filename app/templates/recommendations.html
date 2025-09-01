@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Personalized Recommendations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Your Personalized Recommendations</h1>
+    
+    {% for rec_type, rec_data in recommendations.items() %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>{{ rec_data.title }}</h3>
+            <p class="text-muted mb-0">{{ rec_data.description }}</p>
+        </div>
+        <div class="card-body">
+            {% if rec_data.products %}
+                <div class="row">
+                    {% for product in rec_data.products %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            {% if product.image_url %}
+                            <img src="{{ url_for('static', filename='uploads/' + product.image_url.split('/')[-1]) }}" 
+                                 class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="card-text text-muted">{{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}</p>
+                                
+                                <div class="mb-2">
+                                    <strong>Starting Bid:</strong> {{ format_indian_currency(product.starting_bid) }}
+                                </div>
+                                
+                                {% if rec_data.details and product.id in rec_data.details %}
+                                <div class="recommendation-scores">
+                                    <small class="text-muted">Recommendation Scores:</small>
+                                    <div class="mt-1">
+                                        {% for score_name, score_value in rec_data.details[product.id].items() %}
+                                        <span class="badge bg-info me-1 mb-1">
+                                            {{ score_name.replace('_', ' ').title() }}: {{ score_value }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mt-2">
+                                    <a href="{{ url_for('main.view_auction', auction_id=product.auctions[0].id if product.auctions else 0) }}" 
+                                       class="btn btn-primary btn-sm">View Auction</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No recommendations available yet.</p>
+                    <p class="small">Start bidding on products to get personalized recommendations!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    
+    <div class="card">
+        <div class="card-header">
+            <h4>How Recommendations Work</h4>
+        </div>
+        <div class="card-body">
+                        <div class="row">
+                <div class="col-md-6">
+                    <h5>Content Similarity</h5>
+                    <p class="small">We analyze product names, descriptions, and keywords to find similar items to what you've bid on before using cosine similarity.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Category Preferences</h5>
+                    <p class="small">Based on your bidding history, we identify your preferred product categories and subcategories.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.recommendation-scores {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 3px solid #007bff;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}
