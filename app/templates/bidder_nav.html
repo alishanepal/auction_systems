@@ -28,6 +28,9 @@
         <a href="/upcoming" class="category-link" data-category="upcoming">Upcoming Auctions</a>
         <a href="/closed" class="category-link" data-category="ended">Ended Auctions</a>
         <a href="/trending" class="category-link" data-category="trending">Trending</a>
+        {% if session.user_id and session.role == 'bidder' %}
+        <a href="/bidder/history" class="category-link" data-category="history">My History</a>
+        {% endif %}
         </div>
     
     <!-- No bottom navbar as requested -->

@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+
+{% block title %}My History - Auction System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My Bidding History</h1>
+    
+    <!-- Wishlist Section -->
+    <div class="history-section">
+        <h2 class="section-title">
+            <i class="fas fa-heart"></i>
+            My Wishlist ({{ wishlist_products|length }} items)
+        </h2>
+        
+        {% if wishlist_products %}
+        <div class="products-grid">
+            {% for product in wishlist_products %}
+            <div class="product-card">
+                <div class="product-image">
+                    {% if product.image_url %}
+                    <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+                    {% else %}
+                    <div class="no-image">No Image</div>
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
+                    <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
+                    <p class="product-seller">Seller: {{ product.seller.username }}</p>
+                    
+                    {% set auction = product.auctions[0] if product.auctions else None %}
+                    {% if auction %}
+                    <div class="auction-status">
+                        <span class="status-badge status-{{ auction.status }}">{{ auction.status|title }}</span>
+                        {% if auction.status == 'live' %}
+                        <a href="{{ url_for('main.view_auction', auction_id=auction.id) }}" class="btn btn-primary">View Auction</a>
+                        {% elif auction.status == 'upcoming' %}
+                        <a href="{{ url_for('main.view_auction', auction_id=auction.id) }}" class="btn btn-secondary">View Auction</a>
+                        {% else %}
+                        <a href="{{ url_for('main.view_auction', auction_id=auction.id) }}" class="btn btn-outline">View Results</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-heart-broken"></i>
+            <p>Your wishlist is empty. Start adding items you're interested in!</p>
+            <a href="{{ url_for('main.upcoming_auction') }}" class="btn btn-primary">Browse Upcoming Auctions</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Bid History Section -->
+    <div class="history-section">
+        <h2 class="section-title">
+            <i class="fas fa-history"></i>
+            My Bid History ({{ bid_history|length }} auctions)
+        </h2>
+        
+        {% if bid_history %}
+        <div class="bid-history-list">
+            {% for item in bid_history %}
+            <div class="bid-history-item">
+                <div class="bid-item-image">
+                    {% if item.product.image_url %}
+                    <img src="{{ url_for('static', filename=item.product.image_url) }}" alt="{{ item.product.name }}">
+                    {% else %}
+                    <div class="no-image">No Image</div>
+                    {% endif %}
+                </div>
+                
+                <div class="bid-item-info">
+                    <h3 class="product-name">{{ item.product.name }}</h3>
+                    <p class="product-category">{{ item.product.category.name }} > {{ item.product.subcategory.name }}</p>
+                    <p class="product-seller">Seller: {{ item.product.seller.username }}</p>
+                    
+                    <div class="bid-details">
+                        <div class="bid-stat">
+                            <span class="label">Your Latest Bid:</span>
+                            <span class="value">{{ format_indian_currency(item.latest_bid.bid_amount) }}</span>
+                        </div>
+                        <div class="bid-stat">
+                            <span class="label">Total Bids:</span>
+                            <span class="value">{{ item.total_bids }}</span>
+                        </div>
+                        <div class="bid-stat">
+                            <span class="label">Last Bid:</span>
+                            <span class="value">{{ item.latest_bid.bid_time.strftime('%d %b %Y, %I:%M %p') }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="auction-status">
+                        <span class="status-badge status-{{ item.auction.status }}">{{ item.auction.status|title }}</span>
+                        
+                        {% set current_highest = item.auction.bids|sort(attribute='bid_amount')|last if item.auction.bids else None %}
+                        {% if current_highest %}
+                            {% if current_highest.bidder_id == session.user_id %}
+                            <span class="winning-badge">🏆 You're Winning!</span>
+                            {% else %}
+                            <span class="outbid-badge">Outbid by {{ format_indian_currency(current_highest.bid_amount) }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="bid-actions">
+                        <a href="{{ url_for('main.auction_bid_history', auction_id=item.auction.id) }}" class="btn btn-outline">
+                            <i class="fas fa-chart-line"></i>
+                            View Full History
+                        </a>
+                        {% if item.auction.status == 'live' %}
+                        <a href="{{ url_for('main.view_auction', auction_id=item.auction.id) }}" class="btn btn-primary">
+                            <i class="fas fa-gavel"></i>
+                            Place Bid
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-gavel"></i>
+            <p>You haven't placed any bids yet. Start bidding on items you're interested in!</p>
+            <a href="{{ url_for('main.live_auction') }}" class="btn btn-primary">Browse Live Auctions</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-title {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+}
+
+.history-section {
+    margin-bottom: 40px;
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.section-title {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title i {
+    color: #007bff;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.product-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.product-image {
+    height: 200px;
+    overflow: hidden;
+    background: #f8f9fa;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.product-info {
+    padding: 15px;
+}
+
+.product-name {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.product-category {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 5px 0;
+}
+
+.product-price {
+    font-weight: bold;
+    color: #28a745;
+    margin: 5px 0;
+}
+
+.product-seller {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 5px 0;
+}
+
+.auction-status {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-live {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-upcoming {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-ended {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.bid-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bid-history-item {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: transform 0.2s;
+}
+
+.bid-history-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.bid-item-image {
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.bid-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bid-item-info {
+    flex: 1;
+}
+
+.bid-details {
+    margin: 15px 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.bid-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.bid-stat .label {
+    font-weight: bold;
+    color: #333;
+}
+
+.bid-stat .value {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.winning-badge {
+    background: #d4edda;
+    color: #155724;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.outbid-badge {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.bid-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    border-color: #545b62;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.btn-outline:hover {
+    background: #007bff;
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .bid-history-item {
+        flex-direction: column;
+    }
+    
+    .bid-item-image {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .bid-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

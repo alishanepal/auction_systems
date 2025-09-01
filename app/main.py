@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session
 from .models import db, Product, Auction, Bid, AuctionResult, Wishlist
-from .utils import format_indian_currency, calculate_minimum_increment, calculate_minimum_bid
+from .utils import format_indian_currency, calculate_minimum_increment, calculate_minimum_bid, login_required
 from .recommendations import get_recommended_products, sort_products_for_user
 from sqlalchemy import desc
 from datetime import datetime
@@ -197,3 +197,70 @@ def closed_auction():
     ).all()
     products = [a.product for a in ended_auctions]
     return render_template('closed.html', products=products, format_indian_currency=format_indian_currency)
+
+@main.route('/bidder/history')
+@login_required
+def bidder_history():
+    """Bidder history page showing wishlist and bid history"""
+    user_id = session.get('user_id')
+    
+    # Get user's wishlist items
+    wishlist_items = Wishlist.query.filter_by(user_id=user_id).all()
+    wishlist_products = [item.product for item in wishlist_items]
+    
+    # Get user's bid history (unique auctions they've bid on)
+    user_bids = Bid.query.filter_by(bidder_id=user_id).all()
+    
+    # Group bids by auction and get the latest bid for each auction
+    auction_bid_history = {}
+    for bid in user_bids:
+        auction_id = bid.auction_id
+        if auction_id not in auction_bid_history or bid.bid_time > auction_bid_history[auction_id]['latest_bid'].bid_time:
+            auction_bid_history[auction_id] = {
+                'auction': bid.auction,
+                'product': bid.auction.product,
+                'latest_bid': bid,
+                'total_bids': Bid.query.filter_by(auction_id=auction_id, bidder_id=user_id).count()
+            }
+    
+    # Convert to list and sort by latest bid time
+    bid_history = list(auction_bid_history.values())
+    bid_history.sort(key=lambda x: x['latest_bid'].bid_time, reverse=True)
+    
+    return render_template('bidder_history.html',
+                         wishlist_products=wishlist_products,
+                         bid_history=bid_history,
+                         format_indian_currency=format_indian_currency)
+
+@main.route('/bidder/auction-history/<int:auction_id>')
+@login_required
+def auction_bid_history(auction_id):
+    """Detailed bid history for a specific auction"""
+    user_id = session.get('user_id')
+    
+    # Get the auction
+    auction = Auction.query.get_or_404(auction_id)
+    
+    # Get all bids for this auction by the current user
+    user_bids = Bid.query.filter_by(
+        auction_id=auction_id, 
+        bidder_id=user_id
+    ).order_by(Bid.bid_time.desc()).all()
+    
+    # Get all bids for this auction (for comparison)
+    all_bids = Bid.query.filter_by(auction_id=auction_id).order_by(Bid.bid_time.desc()).all()
+    
+    # Get current highest bid
+    current_highest_bid = Bid.query.filter_by(auction_id=auction_id).order_by(Bid.bid_amount.desc()).first()
+    
+    # Check if user is currently winning
+    is_winning = current_highest_bid and current_highest_bid.bidder_id == user_id
+    
+    return render_template('auction_bid_history.html',
+                         auction=auction,
+                         product=auction.product,
+                         user_bids=user_bids,
+                         all_bids=all_bids,
+                         current_highest_bid=current_highest_bid,
+                         is_winning=is_winning,
+                         format_indian_currency=format_indian_currency)
