@@ -173,17 +173,8 @@ def live_auction():
     ).all()
     products = [a.product for a in live_auctions]
     
-    # Get personalized recommendations for logged-in users
-    recommended_products = []
-    if user_id:
-        recommended_products = get_recommended_products(user_id, limit=3)
-        # Filter out recommended products from main products to avoid duplicates
-        recommended_product_ids = {product.id for product in recommended_products}
-        products = [product for product in products if product.id not in recommended_product_ids]
-    
     return render_template('live.html', 
                          products=products, 
-                         recommended_products=recommended_products,
                          user_id=user_id,
                          format_indian_currency=format_indian_currency)
 
@@ -198,17 +189,8 @@ def upcoming_auction():
     if user_id:
         user_wishlist_product_ids = {w.product_id for w in Wishlist.query.filter_by(user_id=user_id).all()}
     
-    # Get personalized recommendations for logged-in users
-    recommended_products = []
-    if user_id:
-        recommended_products = get_recommended_products(user_id, limit=3)
-        # Filter out recommended products from main products to avoid duplicates
-        recommended_product_ids = {product.id for product in recommended_products}
-        products = [product for product in products if product.id not in recommended_product_ids]
-    
     return render_template('upcoming.html', 
                          products=products, 
-                         recommended_products=recommended_products,
                          user_id=user_id,
                          user_wishlist_product_ids=user_wishlist_product_ids, 
                          format_indian_currency=format_indian_currency)
