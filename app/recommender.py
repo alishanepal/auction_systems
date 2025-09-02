@@ -49,8 +49,9 @@ def get_recommended_products(user_id, limit=10):
     available_auctions = (
         Auction.query
         .filter(
-            (Auction.start_date <= current_time) | 
-            (Auction.start_date > current_time)
+            # Only include live and upcoming auctions (not ended ones)
+            (Auction.start_date <= current_time) & (Auction.end_date > current_time) |  # Live auctions
+            (Auction.start_date > current_time)  # Upcoming auctions
         )
         .all()
     )
@@ -271,7 +272,9 @@ def get_category_based_recommendations(user_id, limit=10):
         .join(Auction, Auction.product_id == Product.id)
         .filter(
             Product.category_id.in_(preferred_category_ids),
-            (Auction.start_date <= current_time) | (Auction.start_date > current_time)
+            # Only include live and upcoming auctions (not ended ones)
+            (Auction.start_date <= current_time) & (Auction.end_date > current_time) |  # Live auctions
+            (Auction.start_date > current_time)  # Upcoming auctions
         )
         .all()
     )

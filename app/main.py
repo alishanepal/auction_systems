@@ -76,10 +76,15 @@ def home():
     recommendation_details = {}
     if user_id:
         recommended_products, recommendation_details = get_recommended_products(user_id, limit=6)
+    
+    # Filter out recommended products from live and upcoming sections to avoid duplicates
+    recommended_product_ids = {product.id for product in recommended_products}
+    live_products_filtered = [product for product in live_products if product.id not in recommended_product_ids]
+    upcoming_products_filtered = [product for product in upcoming_products if product.id not in recommended_product_ids]
 
     return render_template('home.html', 
-                           live_products=live_products,
-                           upcoming_products=upcoming_products,
+                           live_products=live_products_filtered,
+                           upcoming_products=upcoming_products_filtered,
                            ended_products=ended_products,
                            trending_auctions=trending_auctions,
                            user_wishlist_product_ids=user_wishlist_product_ids,
@@ -172,6 +177,9 @@ def live_auction():
     recommended_products = []
     if user_id:
         recommended_products = get_recommended_products(user_id, limit=3)
+        # Filter out recommended products from main products to avoid duplicates
+        recommended_product_ids = {product.id for product in recommended_products}
+        products = [product for product in products if product.id not in recommended_product_ids]
     
     return render_template('live.html', 
                          products=products, 
@@ -194,6 +202,9 @@ def upcoming_auction():
     recommended_products = []
     if user_id:
         recommended_products = get_recommended_products(user_id, limit=3)
+        # Filter out recommended products from main products to avoid duplicates
+        recommended_product_ids = {product.id for product in recommended_products}
+        products = [product for product in products if product.id not in recommended_product_ids]
     
     return render_template('upcoming.html', 
                          products=products, 

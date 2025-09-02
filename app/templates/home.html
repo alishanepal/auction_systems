@@ -35,19 +35,38 @@
                         <p class="product-price">Starting Bid: {{ format_indian_currency(product.starting_bid) }}</p>
                         <p class="product-category">{{ product.category.name }} > {{ product.subcategory.name }}</p>
                         <p class="product-seller">Seller: {{ product.seller.username }}</p>
+                        {% if product.auctions and product.auctions[0].status == 'live' %}
+                            <div class="status-badge live">Live</div>
+                        {% elif product.auctions and product.auctions[0].status == 'upcoming' %}
+                            <div class="status-badge upcoming">Upcoming</div>
+                        {% elif product.auctions %}
+                            <div class="status-badge ended">Ended</div>
+                        {% endif %}
                         {% if product.id in recommendation_details %}
                         <div class="recommendation-scores">
-                            <small class="text-muted">Recommendation Scores:</small>
-                            <div class="mt-1">
-                                {% for score_name, score_value in recommendation_details[product.id].items() %}
-                                <span class="badge bg-info me-1 mb-1">
-                                    {{ score_name.replace('_', ' ').title() }}: {{ score_value }}
-                                </span>
-                                {% endfor %}
+                            <div class="score-header">
+                                <span class="final-score">Score: {{ "%.2f"|format(recommendation_details[product.id].get('final_score', 0)) }}</span>
+                                <button class="toggle-scores-btn" onclick="toggleScores(this, '{{ product.id }}')" title="Show detailed scores">
+                                    <i class="toggle-icon">⚙️</i>
+                                </button>
+                            </div>
+                            <div class="detailed-scores" id="scores-{{ product.id }}" style="display: none;">
+                                <small class="text-muted">Detailed Scores:</small>
+                                <div class="mt-1">
+                                    {% for score_name, score_value in recommendation_details[product.id].items() %}
+                                    {% if score_name != 'final_score' %}
+                                    <span class="badge bg-info me-1 mb-1">
+                                        {{ score_name.replace('_', ' ').title() }}: {{ "%.3f"|format(score_value) }}
+                                    </span>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                         {% endif %}
-                        <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                        {% if product.auctions %}
+                            <a href="/auction/{{ product.auctions[0].id }}" class="btn view-btn">View Auction</a>
+                        {% endif %}
                     </div>
                 </div>
             {% endfor %}
@@ -221,6 +240,22 @@
     </div>
 
     <script>
+        // Toggle recommendation scores
+        function toggleScores(button, productId) {
+            const detailedScores = document.getElementById(`scores-${productId}`);
+            const icon = button.querySelector('.toggle-icon');
+            
+            if (detailedScores.style.display === 'none') {
+                detailedScores.style.display = 'block';
+                icon.textContent = '⚙️';
+                button.title = 'Hide detailed scores';
+            } else {
+                detailedScores.style.display = 'none';
+                icon.textContent = '⚙️';
+                button.title = 'Show detailed scores';
+            }
+        }
+
         // Wishlist toggle
         document.addEventListener('click', async function(e) {
             const btn = e.target.closest('.wishlist-btn');

@@ -126,6 +126,55 @@ body.home-page .content {
     padding: 15px;
 }
 
+.score-details {
+    display: none;
+    background: #f8f9fa;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.score-details.show {
+    display: block;
+}
+
+.score-toggle {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 5px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.score-toggle:hover {
+    background-color: #e9ecef;
+}
+
+.score-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.score-label {
+    flex: 1;
+    color: #666;
+}
+
+.score-value {
+    font-weight: 500;
+    color: #333;
+}
+
 .product-details h3 {
     margin-top: 0;
     margin-bottom: 10px;
@@ -158,6 +207,57 @@ body.home-page .content {
 
 .view-btn:hover {
     background: #3a7bc8;
+}
+
+/* Recommendation Scores Styles */
+.recommendation-scores {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #4a90e2;
+}
+
+.score-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.final-score {
+    font-weight: bold;
+    color: #4a90e2;
+    font-size: 1rem;
+}
+
+.toggle-scores-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.toggle-scores-btn:hover {
+    background-color: #e9ecef;
+}
+
+.toggle-icon {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.detailed-scores {
+    border-top: 1px solid #dee2e6;
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.detailed-scores .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
 }
 
 /* Status Badge Styles */
@@ -1018,40 +1118,4 @@ body.home-page .content {
     letter-spacing: 0.5px;
     box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
     z-index: 2;
-}
-
-/* Recommendation Scores Styling */
-.recommendation-scores {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
-    border-left: 3px solid #007bff;
-    margin: 10px 0;
-}
-
-.recommendation-scores .badge {
-    font-size: 0.7rem;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    display: inline-block;
-}
-
-.recommendation-scores small {
-    color: #6c757d;
-    font-weight: 500;
-}
-
-/* Recommended Products Section Styling */
-.recommended-products h2:after {
-    background: linear-gradient(90deg, #4a90e2, #2ecc71);
-}
-
-.product-card.recommended {
-    border: 2px solid #4a90e2;
-    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.15);
-}
-
-.product-card.recommended:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(74, 144, 226, 0.25);
 }
